@@ -5,7 +5,7 @@ plugins {
 
     // code quality
     id 'checkstyle'
-    // id 'com.github.spotbugs'
+    id 'com.github.spotbugs'
 
     // deployment
     id 'maven-publish'
@@ -68,18 +68,19 @@ configurations.checkstyle {
     }
 }
 
-// spotbugs {
-//     toolVersion = '4.8.3'
-// }
+spotbugs {
+    ignoreFailures = true
+    toolVersion = '4.8.3'
+}
 
-// // Enable HTML report for spotbugs
-// tasks.matching { task -> task.name.startsWith('spotbugs') }.forEach {
-//     it.excludeFilter = rootProject.file("spotbugs.xml")
-//     it.reports {
-//         html.enabled = true
-//         xml.enabled = false
-//     }
-// }
+// Enable HTML report for spotbugs
+tasks.matching { task -> task.name.startsWith('spotbugs') }.forEach {
+    it.excludeFilter = rootProject.file("spotbugs.xml")
+    it.reports {
+        html.enabled = true
+        xml.enabled = false
+    }
+}
 
 publishing {
     publications {
