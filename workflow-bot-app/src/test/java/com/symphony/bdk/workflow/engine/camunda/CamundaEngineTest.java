@@ -1,20 +1,37 @@
 package com.symphony.bdk.workflow.engine.camunda;
 
-import org.checkerframework.checker.units.qual.C;
-import org.mockito.Mockito;
+import static org.camunda.community.mockito.CamundaMockito.runtimeServiceFluentMock;
 
-@org.springframework.test.context.ContextConfiguration(classes = {})
-@org.junit.jupiter.api.extension.ExtendWith(value = org.springframework.test.context.junit.jupiter.SpringExtension.class) // if JUnit 5
+import com.symphony.bdk.workflow.engine.camunda.bpmn.CamundaBpmnBuilder;
+import com.symphony.bdk.workflow.engine.handler.audit.AuditTrailLogAction;
+import com.symphony.bdk.workflow.event.RealTimeEventProcessor;
+import com.symphony.bdk.workflow.event.RequestReceivedEventProcessor;
+
+import org.camunda.bpm.engine.RepositoryService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ContextConfiguration;
+
+import java.util.List;
+
+@ContextConfiguration(classes = {})
+@ExtendWith(value = org.springframework.test.context.junit.jupiter.SpringExtension.class)
 public class CamundaEngineTest {
-  @org.springframework.boot.test.mock.mockito.MockBean com.symphony.bdk.workflow.engine.handler.audit.AuditTrailLogAction auditTrailLogAction;
-  @org.springframework.boot.test.mock.mockito.MockBean com.symphony.bdk.workflow.engine.camunda.bpmn.CamundaBpmnBuilder camundaBpmnBuilder;
-  //@org.springframework.beans.factory.annotation.Autowired com.symphony.bdk.workflow.engine.camunda.CamundaEngine camundaEngine;
-  @org.springframework.beans.factory.annotation.Autowired java.util.List<com.symphony.bdk.workflow.event.RealTimeEventProcessor<?>> list;
-  @org.springframework.boot.test.mock.mockito.MockBean com.symphony.bdk.workflow.event.RealTimeEventProcessor<java.lang.Object> realTimeEventProcessor;
-  @org.springframework.boot.test.mock.mockito.MockBean org.camunda.bpm.engine.RepositoryService repositoryService;
-  @org.junit.jupiter.api.Test // if JUnit 5
+  @MockBean
+  AuditTrailLogAction auditTrailLogAction;
+  @MockBean
+  CamundaBpmnBuilder camundaBpmnBuilder;
+  @MockBean
+  RealTimeEventProcessor<Object> realTimeEventProcessor;
+  @MockBean
+  RepositoryService repositoryService;
+  @Test // if JUnit 5
   public void testSpringContextLoads() {
-    Mockito.when(realTimeEventProcessor.sourceType()).thenReturn(Object.class);
+    RequestReceivedEventProcessor requestReceivedEventProcessor = new RequestReceivedEventProcessor(
+        runtimeServiceFluentMock().getRuntimeService());
+    List<RealTimeEventProcessor<?>> list = List.of(requestReceivedEventProcessor);
     CamundaEngine camundaEngine = new CamundaEngine(repositoryService, camundaBpmnBuilder, list, auditTrailLogAction);
   }
 }
