@@ -3,6 +3,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 plugins {
     id 'workflow-bot.java-conventions'
     id 'org.springframework.boot' version '3.2.2'
+    id 'info.solidsoft.pitest' version '1.15.0'
 }
 
 javadoc {
@@ -121,4 +122,13 @@ processResources {
 signing {
     required { !rootProject.ext.projectVersion.endsWith('SNAPSHOT') }
     sign publishing.publications.plain
+}
+
+pitest {
+    exportLineCoverage = true
+    // Adds dependency to org.pitest:pitest-junit5-plugin and sets 'testPlugin'
+    junit5PluginVersion = '1.2.1'
+    targetClasses = ['com.symphony.bdk.workflow.*']
+    targetTests = ['com.symphony.bdk.workflow.*']
+    timestampedReports = false
 }
