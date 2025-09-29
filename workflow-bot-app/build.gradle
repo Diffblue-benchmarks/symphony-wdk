@@ -77,6 +77,10 @@ dependencies {
     testImplementation("org.camunda.community.mockito:camunda-platform-7-mockito:7.20.0") {
         exclude group: 'org.slf4j', module: 'slf4j-api'
     }
+
+    compileOnly("com.diffblue.cover:cover-annotations:1.6.0")
+    testImplementation("com.diffblue.cover:cover-annotations:1.6.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.19.0")
 }
 
 bootJar {

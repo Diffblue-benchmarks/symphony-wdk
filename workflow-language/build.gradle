@@ -15,4 +15,11 @@ dependencies {
     api 'org.finos.symphony.bdk:symphony-bdk-core'
     api 'org.finos.symphony.bdk.ext:symphony-group-extension'
     api 'com.fasterxml.jackson.core:jackson-annotations'
+
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.13.4")
+    testImplementation("org.junit.platform:junit-platform-launcher:1.13.4")
+    testImplementation("org.mockito:mockito-core:5.19.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.19.0")
+    compileOnly("com.diffblue.cover:cover-annotations:1.6.0")
+    testImplementation("com.diffblue.cover:cover-annotations:1.6.0")
 }
