@@ -1,0 +1,48 @@
+package com.symphony.bdk.workflow.monitoring.service.converter;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import com.diffblue.cover.annotations.ManagedByDiffblue;
+import com.diffblue.cover.annotations.MethodsUnderTest;
+import com.symphony.bdk.workflow.api.v1.dto.WorkflowView;
+import com.symphony.bdk.workflow.monitoring.repository.domain.WorkflowDomain;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+@ContextConfiguration(classes = {WorkflowViewConverter.class})
+@ExtendWith(SpringExtension.class)
+class WorkflowViewConverterDiffblueTest {
+  @Autowired private WorkflowViewConverter workflowViewConverter;
+
+  /**
+   * Test {@link WorkflowViewConverter#apply(WorkflowDomain)} with {@code WorkflowDomain}.
+   *
+   * <ul>
+   *   <li>Then return Id is {@code Name}.
+   * </ul>
+   *
+   * <p>Method under test: {@link WorkflowViewConverter#apply(WorkflowDomain)}
+   */
+  @Test
+  @DisplayName("Test apply(WorkflowDomain) with 'WorkflowDomain'; then return Id is 'Name'")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({"WorkflowView WorkflowViewConverter.apply(WorkflowDomain)"})
+  void testApplyWithWorkflowDomain_thenReturnIdIsName() {
+    // Arrange
+    WorkflowDomain workflowDomain = new WorkflowDomain("42", "Name", 1L);
+
+    // Act
+    WorkflowView actualApplyResult = workflowViewConverter.apply(workflowDomain);
+
+    // Assert
+    assertEquals("Name", actualApplyResult.getId());
+    assertNull(actualApplyResult.getCreatedBy());
+    assertEquals(1L, actualApplyResult.getVersion().longValue());
+  }
+}
