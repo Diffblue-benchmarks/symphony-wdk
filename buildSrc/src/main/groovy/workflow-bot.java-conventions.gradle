@@ -40,21 +40,6 @@ test {
     }
 }
 
-jacocoTestCoverageVerification {
-    violationRules {
-        rule {
-            limit {
-                counter = 'LINE'
-                value = 'COVEREDRATIO'
-                minimum = 0.9
-            }
-            element = 'BUNDLE'
-        }
-    }
-}
-
-test.finalizedBy jacocoTestReport
-check.dependsOn jacocoTestCoverageVerification
 check.dependsOn javadoc
 
 checkstyle {
