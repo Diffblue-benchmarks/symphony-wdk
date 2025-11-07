@@ -76,6 +76,7 @@ dependencies {
     testImplementation("org.camunda.community.mockito:camunda-platform-7-mockito:7.20.0") {
         exclude group: 'org.slf4j', module: 'slf4j-api'
     }
+    testImplementation("org.junit.vintage:junit-vintage-engine:5.10.1")
 }
 
 bootJar {
