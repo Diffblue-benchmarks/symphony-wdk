@@ -9,6 +9,10 @@ java {
     }
 }
 
+test {
+    useJUnitPlatform()
+}
+
 repositories {
     mavenCentral()
 }
