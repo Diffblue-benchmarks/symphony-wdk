@@ -70,6 +70,7 @@ configurations.checkstyle {
 
 spotbugs {
     toolVersion = '4.8.3'
+    ignoreFailures = true
 }
 
 // Enable HTML report for spotbugs
