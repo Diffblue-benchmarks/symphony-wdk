@@ -1,0 +1,1566 @@
+{
+  "meta" : {
+    "reportVersion" : "2.6"
+  },
+  "run" : {
+    "version" : "2025.02.02-08b2a5a-licensed",
+    "creationTimestamp" : "2025-11-08T18:06:26.334211601Z",
+    "command" : "dcover create --coverage-reports --upload http://localhost:8080 --project-name symphony-wdk --name with-diffblue-tests",
+    "totalTime" : 248.139,
+    "environmentDetectionTime" : 1.342,
+    "indexingTime" : 0.348,
+    "entryPointsTime" : 1.188,
+    "generationTime" : 121.849,
+    "timeToFirstTest" : 87.042,
+    "timeToLastTest" : 194.904,
+    "indexQueryTime" : 12.886000000000001,
+    "verificationTime" : 17.771,
+    "validationTime" : 36.776
+  },
+  "codes" : {
+    "R000" : "Success",
+    "R005" : "Unable to load class",
+    "R026" : "Failed to create Spring context",
+    "R027" : "Missing beans when creating Spring context",
+    "T000" : "Method eligible for test creation",
+    "T001" : "Trivial getter",
+    "T002" : "Trivial setter",
+    "T003" : "Private method",
+    "T004" : "In anonymous inner class",
+    "T005" : "Trivial constructor",
+    "T007" : "Framework configuration callback",
+    "T012" : "Synthetic method",
+    "T020" : "Other trivial method",
+    "V000" : "Validated successfully"
+  },
+  "summary" : {
+    "classesCount" : 17,
+    "methodsCount" : 97,
+    "cumulativeDiffblueTestCount" : 73,
+    "cumulativeManualTestCount" : 0,
+    "completeTestCount" : 73,
+    "incompleteTestCount" : 0,
+    "skeletonTestCount" : 0,
+    "totalPhysicalLineCount" : 550,
+    "perMethodTestability" : {
+      "T000" : 37,
+      "T001" : 8,
+      "T002" : 8,
+      "T003" : 3,
+      "T004" : 2,
+      "T005" : 12,
+      "T007" : 6,
+      "T012" : 15,
+      "T020" : 6
+    },
+    "perMethodOutcome" : {
+      "R000" : 55,
+      "R005" : 5,
+      "R026" : 2,
+      "R027" : 1,
+      "T003" : 3,
+      "T004" : 2,
+      "T005" : 8,
+      "T007" : 6,
+      "T012" : 15
+    },
+    "perTestOutcome" : {
+      "R000" : 73
+    },
+    "perTestValidation" : {
+      "V000" : 73
+    }
+  },
+  "classes" : {
+    "com.symphony.devsol.client.ExtAppClient" : {
+      "methodsCount" : 2,
+      "completeTestCount" : 2,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 1,
+        "T005" : 1
+      },
+      "perMethodOutcome" : {
+        "R000" : 1,
+        "T005" : 1
+      },
+      "perTestOutcome" : {
+        "R000" : 2
+      }
+    },
+    "com.symphony.devsol.client.GitHubClient" : {
+      "methodsCount" : 15,
+      "completeTestCount" : 9,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 6,
+        "T003" : 2,
+        "T012" : 7
+      },
+      "perMethodOutcome" : {
+        "R000" : 5,
+        "T003" : 2,
+        "T005" : 1,
+        "T012" : 7
+      },
+      "perTestOutcome" : {
+        "R000" : 9
+      }
+    },
+    "com.symphony.devsol.client.SymphonyClient" : {
+      "methodsCount" : 8,
+      "completeTestCount" : 10,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 5,
+        "T005" : 1,
+        "T012" : 2
+      },
+      "perMethodOutcome" : {
+        "R000" : 5,
+        "T005" : 1,
+        "T012" : 2
+      },
+      "perTestOutcome" : {
+        "R000" : 10
+      }
+    },
+    "com.symphony.devsol.client.WdkClient" : {
+      "methodsCount" : 5,
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 2,
+        "T005" : 1,
+        "T012" : 2
+      },
+      "perMethodOutcome" : {
+        "R005" : 3,
+        "T012" : 2
+      }
+    },
+    "com.symphony.devsol.config.AccessFilter" : {
+      "methodsCount" : 3,
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 2,
+        "T012" : 1
+      },
+      "perMethodOutcome" : {
+        "R005" : 2,
+        "T012" : 1
+      }
+    },
+    "com.symphony.devsol.config.AuthFilter" : {
+      "methodsCount" : 3,
+      "completeTestCount" : 2,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 2,
+        "T012" : 1
+      },
+      "perMethodOutcome" : {
+        "R000" : 1,
+        "T005" : 1,
+        "T012" : 1
+      },
+      "perTestOutcome" : {
+        "R000" : 2
+      }
+    },
+    "com.symphony.devsol.config.AutoConfig" : {
+      "methodsCount" : 3,
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 1,
+        "T005" : 1,
+        "T012" : 1
+      },
+      "perMethodOutcome" : {
+        "R026" : 1,
+        "T005" : 1,
+        "T012" : 1
+      }
+    },
+    "com.symphony.devsol.config.CorsConfig" : {
+      "methodsCount" : 2,
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 1,
+        "T005" : 1
+      },
+      "perMethodOutcome" : {
+        "R027" : 1,
+        "T005" : 1
+      }
+    },
+    "com.symphony.devsol.config.FilterConfig" : {
+      "methodsCount" : 4,
+      "completeTestCount" : 2,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 3,
+        "T005" : 1
+      },
+      "perMethodOutcome" : {
+        "R000" : 2,
+        "R026" : 1,
+        "T005" : 1
+      },
+      "perTestOutcome" : {
+        "R000" : 2
+      }
+    },
+    "com.symphony.devsol.config.WdkFilter" : {
+      "methodsCount" : 4,
+      "completeTestCount" : 2,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 2,
+        "T003" : 1,
+        "T012" : 1
+      },
+      "perMethodOutcome" : {
+        "R000" : 1,
+        "T003" : 1,
+        "T005" : 1,
+        "T012" : 1
+      },
+      "perTestOutcome" : {
+        "R000" : 2
+      }
+    },
+    "com.symphony.devsol.config.WdkFilter$1" : {
+      "methodsCount" : 2,
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T004" : 2
+      },
+      "perMethodOutcome" : {
+        "T004" : 2
+      }
+    },
+    "com.symphony.devsol.model.github.GitHubContent" : {
+      "methodsCount" : 7,
+      "completeTestCount" : 8,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 2,
+        "T001" : 1,
+        "T002" : 1,
+        "T005" : 1,
+        "T007" : 1,
+        "T020" : 1
+      },
+      "perMethodOutcome" : {
+        "R000" : 6,
+        "T007" : 1
+      },
+      "perTestOutcome" : {
+        "R000" : 8
+      }
+    },
+    "com.symphony.devsol.model.github.GitHubTree" : {
+      "methodsCount" : 7,
+      "completeTestCount" : 6,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 2,
+        "T001" : 1,
+        "T002" : 1,
+        "T005" : 1,
+        "T007" : 1,
+        "T020" : 1
+      },
+      "perMethodOutcome" : {
+        "R000" : 6,
+        "T007" : 1
+      },
+      "perTestOutcome" : {
+        "R000" : 6
+      }
+    },
+    "com.symphony.devsol.model.github.GitHubTreeNode" : {
+      "methodsCount" : 7,
+      "completeTestCount" : 8,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 2,
+        "T001" : 1,
+        "T002" : 1,
+        "T005" : 1,
+        "T007" : 1,
+        "T020" : 1
+      },
+      "perMethodOutcome" : {
+        "R000" : 6,
+        "T007" : 1
+      },
+      "perTestOutcome" : {
+        "R000" : 8
+      }
+    },
+    "com.symphony.devsol.model.wdk.Profile" : {
+      "methodsCount" : 7,
+      "completeTestCount" : 6,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 2,
+        "T001" : 1,
+        "T002" : 1,
+        "T005" : 1,
+        "T007" : 1,
+        "T020" : 1
+      },
+      "perMethodOutcome" : {
+        "R000" : 6,
+        "T007" : 1
+      },
+      "perTestOutcome" : {
+        "R000" : 6
+      }
+    },
+    "com.symphony.devsol.model.wdk.SimpleUser" : {
+      "methodsCount" : 9,
+      "completeTestCount" : 11,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 2,
+        "T001" : 2,
+        "T002" : 2,
+        "T005" : 1,
+        "T007" : 1,
+        "T020" : 1
+      },
+      "perMethodOutcome" : {
+        "R000" : 8,
+        "T007" : 1
+      },
+      "perTestOutcome" : {
+        "R000" : 11
+      }
+    },
+    "com.symphony.devsol.model.wdk.Workflow" : {
+      "methodsCount" : 9,
+      "completeTestCount" : 7,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 2,
+        "T001" : 2,
+        "T002" : 2,
+        "T005" : 1,
+        "T007" : 1,
+        "T020" : 1
+      },
+      "perMethodOutcome" : {
+        "R000" : 8,
+        "T007" : 1
+      },
+      "perTestOutcome" : {
+        "R000" : 7
+      }
+    }
+  },
+  "methods" : {
+    "com.symphony.devsol.client.ExtAppClient.<init>:(Lcom/symphony/bdk/core/auth/ExtensionAppAuthenticator;)V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "T005",
+      "lineNumbers" : [
+        12
+      ]
+    },
+    "com.symphony.devsol.client.ExtAppClient.validate:(Ljava/lang/String;)Lcom/symphony/bdk/core/auth/jwt/UserClaim;" : {
+      "completeTestCount" : 2,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 2
+      },
+      "lineNumbers" : [
+        18
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.<clinit>:()V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        22
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.<init>:(Ljava/lang/String;Lorg/springframework/boot/web/client/RestTemplateBuilder;)V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "T005",
+      "lineNumbers" : [
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.getGithubContent:(Ljava/lang/String;)Ljava/lang/String;" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T003",
+      "perMethodOutcome" : "T003",
+      "lineNumbers" : [
+        91,
+        92,
+        93
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.getGithubTree:(Ljava/lang/String;)Ljava/util/List;" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T003",
+      "perMethodOutcome" : "T003",
+      "lineNumbers" : [
+        85,
+        86,
+        87
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.getReadme:(Ljava/lang/String;)Ljava/lang/String;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        71,
+        72,
+        73
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.getReadme:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        79,
+        80,
+        81
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.getWorkflow:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        63,
+        64,
+        65
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.lambda$listGalleryCategories$0:(Ljava/lang/String;)Z" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        42
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.lambda$listGalleryCategories$1:(Ljava/lang/String;)Ljava/lang/String;" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        43
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.lambda$listGalleryCategories$2:(Ljava/lang/String;)Z" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        44
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.lambda$listGalleryWorkflows$3:(Ljava/lang/String;Ljava/lang/String;)Z" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        54
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.lambda$listGalleryWorkflows$4:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        55
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.lambda$listGalleryWorkflows$5:(Ljava/lang/String;)Z" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        56
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.listGalleryCategories:()Ljava/util/List;" : {
+      "completeTestCount" : 3,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 3
+      },
+      "lineNumbers" : [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        40
+      ]
+    },
+    "com.symphony.devsol.client.GitHubClient.listGalleryWorkflows:(Ljava/lang/String;)Ljava/util/List;" : {
+      "completeTestCount" : 3,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 3
+      },
+      "lineNumbers" : [
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        52
+      ]
+    },
+    "com.symphony.devsol.client.SymphonyClient.<init>:(Lcom/symphony/bdk/core/service/user/UserService;Lcom/symphony/bdk/core/service/session/SessionService;)V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "T005",
+      "lineNumbers" : [
+        32
+      ]
+    },
+    "com.symphony.devsol.client.SymphonyClient.getAppId:()Ljava/util/Map;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        43
+      ]
+    },
+    "com.symphony.devsol.client.SymphonyClient.getProfile:(Lcom/symphony/bdk/core/auth/jwt/UserClaim;)Lcom/symphony/devsol/model/wdk/Profile;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        48
+      ]
+    },
+    "com.symphony.devsol.client.SymphonyClient.getSymphonyUser:(J)Lcom/symphony/devsol/model/wdk/SimpleUser;" : {
+      "completeTestCount" : 3,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 3
+      },
+      "lineNumbers" : [
+        54,
+        55,
+        56,
+        58,
+        59
+      ]
+    },
+    "com.symphony.devsol.client.SymphonyClient.getSymphonyUser:(Ljava/lang/String;)Ljava/util/List;" : {
+      "completeTestCount" : 4,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 4
+      },
+      "lineNumbers" : [
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        65
+      ]
+    },
+    "com.symphony.devsol.client.SymphonyClient.getSymphonyUsers:(Ljava/util/List;)Ljava/util/Map;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        76,
+        77,
+        76
+      ]
+    },
+    "com.symphony.devsol.client.SymphonyClient.lambda$getSymphonyUser$0:(Lcom/symphony/bdk/gen/api/model/UserV2;)Z" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        67
+      ]
+    },
+    "com.symphony.devsol.client.SymphonyClient.lambda$getSymphonyUser$1:(Lcom/symphony/bdk/gen/api/model/UserV2;)Lcom/symphony/devsol/model/wdk/SimpleUser;" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        70
+      ]
+    },
+    "com.symphony.devsol.client.WdkClient.<clinit>:()V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        36
+      ]
+    },
+    "com.symphony.devsol.client.WdkClient.<init>:(Lcom/symphony/bdk/workflow/monitoring/service/MonitoringService;Lcom/symphony/bdk/workflow/management/WorkflowManagementService;)V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "R005",
+      "lineNumbers" : [
+        38
+      ]
+    },
+    "com.symphony.devsol.client.WdkClient.exportWorkflows:(Lcom/symphony/bdk/core/auth/jwt/UserClaim;)Lorg/springframework/http/ResponseEntity;" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R005",
+      "lineNumbers" : [
+        49,
+        50,
+        52,
+        53,
+        54,
+        55,
+        56,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        65,
+        66,
+        68,
+        69,
+        71,
+        72,
+        73,
+        75,
+        77,
+        78,
+        79,
+        80,
+        77,
+        58,
+        80,
+        81,
+        82
+      ]
+    },
+    "com.symphony.devsol.client.WdkClient.importWorkflows:(Lorg/springframework/web/multipart/MultipartFile;Lcom/symphony/bdk/core/auth/jwt/UserClaim;)V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R005",
+      "lineNumbers" : [
+        91,
+        92,
+        94,
+        95,
+        98,
+        99,
+        100,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        95,
+        111,
+        109,
+        110,
+        112,
+        113
+      ]
+    },
+    "com.symphony.devsol.client.WdkClient.lambda$exportWorkflows$0:(Lcom/symphony/bdk/workflow/api/v1/dto/WorkflowView;)Lcom/symphony/bdk/workflow/api/v1/dto/VersionedWorkflowView;" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        54
+      ]
+    },
+    "com.symphony.devsol.config.AccessFilter.<clinit>:()V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        27
+      ]
+    },
+    "com.symphony.devsol.config.AccessFilter.<init>:(Lcom/symphony/bdk/workflow/management/WorkflowManagementService;)V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R005",
+      "lineNumbers" : [
+        29,
+        31,
+        32,
+        29
+      ]
+    },
+    "com.symphony.devsol.config.AccessFilter.doFilterInternal:(Ljakarta/servlet/http/HttpServletRequest;Ljakarta/servlet/http/HttpServletResponse;Ljakarta/servlet/FilterChain;)V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R005",
+      "lineNumbers" : [
+        40,
+        41,
+        42,
+        43,
+        44,
+        46,
+        47,
+        48,
+        51,
+        53,
+        54,
+        55,
+        56,
+        57,
+        60,
+        61,
+        62,
+        63,
+        64,
+        69,
+        70,
+        71,
+        72,
+        73,
+        76,
+        77
+      ]
+    },
+    "com.symphony.devsol.config.AuthFilter.<clinit>:()V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        23
+      ]
+    },
+    "com.symphony.devsol.config.AuthFilter.<init>:(Lcom/symphony/devsol/client/ExtAppClient;)V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "T005",
+      "lineNumbers" : [
+        25,
+        28,
+        25
+      ]
+    },
+    "com.symphony.devsol.config.AuthFilter.doFilterInternal:(Ljakarta/servlet/http/HttpServletRequest;Ljakarta/servlet/http/HttpServletResponse;Ljakarta/servlet/FilterChain;)V" : {
+      "completeTestCount" : 2,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 2
+      },
+      "lineNumbers" : [
+        38,
+        39,
+        40,
+        41,
+        43,
+        44,
+        45,
+        46,
+        49,
+        50,
+        54,
+        51,
+        52,
+        53,
+        56,
+        57,
+        60,
+        61
+      ]
+    },
+    "com.symphony.devsol.config.AutoConfig.<clinit>:()V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        11
+      ]
+    },
+    "com.symphony.devsol.config.AutoConfig.<init>:()V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "T005",
+      "lineNumbers" : [
+        16
+      ]
+    },
+    "com.symphony.devsol.config.AutoConfig.init:()V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R026",
+      "lineNumbers" : [
+        19,
+        20
+      ]
+    },
+    "com.symphony.devsol.config.CorsConfig.<init>:()V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "T005",
+      "lineNumbers" : [
+        12
+      ]
+    },
+    "com.symphony.devsol.config.CorsConfig.addCorsMappings:(Lorg/springframework/web/servlet/config/annotation/CorsRegistry;)V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R027",
+      "lineNumbers" : [
+        15,
+        16,
+        17
+      ]
+    },
+    "com.symphony.devsol.config.FilterConfig.<init>:()V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "T005",
+      "lineNumbers" : [
+        10
+      ]
+    },
+    "com.symphony.devsol.config.FilterConfig.accessFilterRegistration:(Lcom/symphony/devsol/config/AccessFilter;)Lorg/springframework/boot/web/servlet/FilterRegistrationBean;" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R026",
+      "lineNumbers" : [
+        22,
+        23,
+        24,
+        25,
+        26
+      ]
+    },
+    "com.symphony.devsol.config.FilterConfig.authFilterRegistration:(Lcom/symphony/devsol/config/AuthFilter;)Lorg/springframework/boot/web/servlet/FilterRegistrationBean;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        13,
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    "com.symphony.devsol.config.FilterConfig.wdkFilterRegistration:(Lcom/symphony/devsol/config/WdkFilter;)Lorg/springframework/boot/web/servlet/FilterRegistrationBean;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        31,
+        32,
+        33,
+        34,
+        35
+      ]
+    },
+    "com.symphony.devsol.config.WdkFilter$1.<init>:(Lcom/symphony/devsol/config/WdkFilter;Ljakarta/servlet/http/HttpServletRequest;)V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T004",
+      "perMethodOutcome" : "T004",
+      "lineNumbers" : [
+        28
+      ]
+    },
+    "com.symphony.devsol.config.WdkFilter$1.getHeader:(Ljava/lang/String;)Ljava/lang/String;" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T004",
+      "perMethodOutcome" : "T004",
+      "lineNumbers" : [
+        31,
+        32,
+        34,
+        35,
+        37
+      ]
+    },
+    "com.symphony.devsol.config.WdkFilter.<clinit>:()V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T012",
+      "perMethodOutcome" : "T012",
+      "lineNumbers" : [
+        18
+      ]
+    },
+    "com.symphony.devsol.config.WdkFilter.<init>:()V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "T005",
+      "lineNumbers" : [
+        20
+      ]
+    },
+    "com.symphony.devsol.config.WdkFilter.doFilterInternal:(Ljakarta/servlet/http/HttpServletRequest;Ljakarta/servlet/http/HttpServletResponse;Ljakarta/servlet/FilterChain;)V" : {
+      "completeTestCount" : 2,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 2
+      },
+      "lineNumbers" : [
+        48,
+        49
+      ]
+    },
+    "com.symphony.devsol.config.WdkFilter.wdkTokenWrapper:(Ljakarta/servlet/http/HttpServletRequest;)Ljakarta/servlet/http/HttpServletRequestWrapper;" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T003",
+      "perMethodOutcome" : "T003",
+      "lineNumbers" : [
+        28
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubContent.<init>:()V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubContent.canEqual:(Ljava/lang/Object;)Z" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T007",
+      "perMethodOutcome" : "T007",
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubContent.equals:(Ljava/lang/Object;)Z" : {
+      "completeTestCount" : 7,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 7
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubContent.getContent:()Ljava/lang/String;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T001",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        9
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubContent.hashCode:()I" : {
+      "completeTestCount" : 7,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 7
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubContent.setContent:(Ljava/lang/String;)V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T002",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubContent.toString:()Ljava/lang/String;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T020",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTree.<init>:()V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        8
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTree.canEqual:(Ljava/lang/Object;)Z" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T007",
+      "perMethodOutcome" : "T007",
+      "lineNumbers" : [
+        8
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTree.equals:(Ljava/lang/Object;)Z" : {
+      "completeTestCount" : 5,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 5
+      },
+      "lineNumbers" : [
+        8
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTree.getTree:()Ljava/util/List;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T001",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        11
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTree.hashCode:()I" : {
+      "completeTestCount" : 5,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 5
+      },
+      "lineNumbers" : [
+        8
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTree.setTree:(Ljava/util/List;)V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T002",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        8
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTree.toString:()Ljava/lang/String;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T020",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        8
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTreeNode.<init>:()V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTreeNode.canEqual:(Ljava/lang/Object;)Z" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T007",
+      "perMethodOutcome" : "T007",
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTreeNode.equals:(Ljava/lang/Object;)Z" : {
+      "completeTestCount" : 7,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 7
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTreeNode.getPath:()Ljava/lang/String;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T001",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        9
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTreeNode.hashCode:()I" : {
+      "completeTestCount" : 7,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 7
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTreeNode.setPath:(Ljava/lang/String;)V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T002",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.github.GitHubTreeNode.toString:()Ljava/lang/String;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T020",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Profile.<init>:(Z)V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        7
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Profile.canEqual:(Ljava/lang/Object;)Z" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T007",
+      "perMethodOutcome" : "T007",
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Profile.equals:(Ljava/lang/Object;)Z" : {
+      "completeTestCount" : 5,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 5
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Profile.hashCode:()I" : {
+      "completeTestCount" : 5,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 5
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Profile.isAdmin:()Z" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T001",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        9
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Profile.setAdmin:(Z)V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T002",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Profile.toString:()Ljava/lang/String;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T020",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.SimpleUser.<init>:(Ljava/lang/Long;Ljava/lang/String;)V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        7
+      ]
+    },
+    "com.symphony.devsol.model.wdk.SimpleUser.canEqual:(Ljava/lang/Object;)Z" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T007",
+      "perMethodOutcome" : "T007",
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.SimpleUser.equals:(Ljava/lang/Object;)Z" : {
+      "completeTestCount" : 10,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 10
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.SimpleUser.getDisplayName:()Ljava/lang/String;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T001",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        10
+      ]
+    },
+    "com.symphony.devsol.model.wdk.SimpleUser.getId:()Ljava/lang/Long;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T001",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        9
+      ]
+    },
+    "com.symphony.devsol.model.wdk.SimpleUser.hashCode:()I" : {
+      "completeTestCount" : 10,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 10
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.SimpleUser.setDisplayName:(Ljava/lang/String;)V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T002",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.SimpleUser.setId:(Ljava/lang/Long;)V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T002",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.SimpleUser.toString:()Ljava/lang/String;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T020",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Workflow.<init>:()V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Workflow.canEqual:(Ljava/lang/Object;)Z" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T007",
+      "perMethodOutcome" : "T007",
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Workflow.equals:(Ljava/lang/Object;)Z" : {
+      "completeTestCount" : 6,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 6
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Workflow.getCreatedBy:()J" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T001",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        10
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Workflow.hashCode:()I" : {
+      "completeTestCount" : 6,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 6
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Workflow.isActive:()Z" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T001",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        9
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Workflow.setActive:(Z)V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T002",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Workflow.setCreatedBy:(J)V" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T002",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    },
+    "com.symphony.devsol.model.wdk.Workflow.toString:()Ljava/lang/String;" : {
+      "completeTestCount" : 1,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T020",
+      "perMethodOutcome" : "R000",
+      "perTestOutcome" : {
+        "R000" : 1
+      },
+      "lineNumbers" : [
+        6
+      ]
+    }
+  }
+}

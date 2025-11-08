@@ -1,0 +1,607 @@
+package com.symphony.bdk.workflow.swadl.v1.activity;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.diffblue.cover.annotations.MethodsUnderTest;
+import com.symphony.bdk.workflow.swadl.v1.Event;
+import com.symphony.bdk.workflow.swadl.v1.event.ActivityCompletedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.ActivityExpiredEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.ActivityFailedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.ConnectionAcceptedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.ConnectionRequestedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.FormRepliedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.ImCreatedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.MessageReceivedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.MessageSuppressedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.PostSharedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RequestReceivedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RoomCreatedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RoomDeactivatedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RoomMemberDemotedFromOwnerEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RoomMemberPromotedToOwnerEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RoomReactivatedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RoomUpdatedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.TimerFiredEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.UserJoinedRoomEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.UserLeftRoomEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.UserRequestedToJoinRoomEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
+class RelationalEventsDiffblueTest {
+  /**
+   * Test {@link RelationalEvents#isEmpty()}.
+   * <ul>
+   *   <li>Given {@link ActivityCompletedEvent} (default constructor) ActivityId is {@code 42}.</li>
+   *   <li>Then return {@code false}.</li>
+   * </ul>
+   * <p>
+   * Method under test: {@link RelationalEvents#isEmpty()}
+   */
+  @Test
+  @DisplayName("Test isEmpty(); given ActivityCompletedEvent (default constructor) ActivityId is '42'; then return 'false'")
+  @Tag("MaintainedByDiffblue")
+  @MethodsUnderTest({"boolean RelationalEvents.isEmpty()"})
+  void testIsEmpty_givenActivityCompletedEventActivityIdIs42_thenReturnFalse() {
+    // Arrange
+    ActivityCompletedEvent activityCompleted = new ActivityCompletedEvent();
+    activityCompleted.setActivityId("42");
+    activityCompleted.setId("42");
+    activityCompleted.setIfCondition("If Condition");
+
+    ActivityExpiredEvent activityExpired = new ActivityExpiredEvent();
+    activityExpired.setActivityId("42");
+    activityExpired.setId("42");
+
+    ActivityFailedEvent activityFailed = new ActivityFailedEvent();
+    activityFailed.setActivityId("42");
+    activityFailed.setId("42");
+
+    ConnectionAcceptedEvent connectionAccepted = new ConnectionAcceptedEvent();
+    connectionAccepted.setId("42");
+
+    ConnectionRequestedEvent connectionRequested = new ConnectionRequestedEvent();
+    connectionRequested.setId("42");
+
+    FormRepliedEvent formReplied = new FormRepliedEvent();
+    formReplied.setExclusive(true);
+    formReplied.setFormId("42");
+    formReplied.setId("42");
+
+    ImCreatedEvent imCreated = new ImCreatedEvent();
+    imCreated.setId("42");
+
+    MessageReceivedEvent messageReceived = new MessageReceivedEvent();
+    messageReceived.setContent("Not all who wander are lost");
+    messageReceived.setId("42");
+    messageReceived.setRequiresBotMention(true);
+
+    MessageSuppressedEvent messageSuppressed = new MessageSuppressedEvent();
+    messageSuppressed.setId("42");
+
+    PostSharedEvent postShared = new PostSharedEvent();
+    postShared.setId("42");
+
+    RequestReceivedEvent requestReceived = new RequestReceivedEvent();
+    requestReceived.setArguments(new HashMap<>());
+    requestReceived.setId("42");
+    requestReceived.setToken("ABC123");
+    requestReceived.setWorkflowId("42");
+
+    RoomCreatedEvent roomCreated = new RoomCreatedEvent();
+    roomCreated.setId("42");
+
+    RoomDeactivatedEvent roomDeactivated = new RoomDeactivatedEvent();
+    roomDeactivated.setId("42");
+
+    RoomMemberDemotedFromOwnerEvent roomMemberDemotedFromOwner = new RoomMemberDemotedFromOwnerEvent();
+    roomMemberDemotedFromOwner.setId("42");
+
+    RoomMemberPromotedToOwnerEvent roomMemberPromotedToOwner = new RoomMemberPromotedToOwnerEvent();
+    roomMemberPromotedToOwner.setId("42");
+
+    RoomReactivatedEvent roomReactivated = new RoomReactivatedEvent();
+    roomReactivated.setId("42");
+
+    RoomUpdatedEvent roomUpdated = new RoomUpdatedEvent();
+    roomUpdated.setId("42");
+
+    TimerFiredEvent timerFired = new TimerFiredEvent();
+    timerFired.setAt("At");
+    timerFired.setId("42");
+    timerFired.setRepeat("Repeat");
+
+    UserJoinedRoomEvent userJoinedRoom = new UserJoinedRoomEvent();
+    userJoinedRoom.setId("42");
+
+    UserLeftRoomEvent userLeftRoom = new UserLeftRoomEvent();
+    userLeftRoom.setId("42");
+
+    UserRequestedToJoinRoomEvent userRequestedJoinRoom = new UserRequestedToJoinRoomEvent();
+    userRequestedJoinRoom.setId("42");
+
+    Event event = new Event();
+    event.setActivityCompleted(activityCompleted);
+    event.setActivityExpired(activityExpired);
+    event.setActivityFailed(activityFailed);
+    event.setAllOf(new ArrayList<>());
+    event.setConnectionAccepted(connectionAccepted);
+    event.setConnectionRequested(connectionRequested);
+    event.setFormReplied(formReplied);
+    event.setImCreated(imCreated);
+    event.setMessageReceived(messageReceived);
+    event.setMessageSuppressed(messageSuppressed);
+    event.setOneOf(new ArrayList<>());
+    event.setPostShared(postShared);
+    event.setRequestReceived(requestReceived);
+    event.setRoomCreated(roomCreated);
+    event.setRoomDeactivated(roomDeactivated);
+    event.setRoomMemberDemotedFromOwner(roomMemberDemotedFromOwner);
+    event.setRoomMemberPromotedToOwner(roomMemberPromotedToOwner);
+    event.setRoomReactivated(roomReactivated);
+    event.setRoomUpdated(roomUpdated);
+    event.setTimerFired(timerFired);
+    event.setUserJoinedRoom(userJoinedRoom);
+    event.setUserLeftRoom(userLeftRoom);
+    event.setUserRequestedJoinRoom(userRequestedJoinRoom);
+
+    ArrayList<Event> events = new ArrayList<>();
+    events.add(event);
+
+    // Act and Assert
+    assertFalse((new RelationalEvents(events, true)).isEmpty());
+  }
+
+  /**
+   * Test {@link RelationalEvents#isEmpty()}.
+   * <ul>
+   *   <li>Then return {@code true}.</li>
+   * </ul>
+   * <p>
+   * Method under test: {@link RelationalEvents#isEmpty()}
+   */
+  @Test
+  @DisplayName("Test isEmpty(); then return 'true'")
+  @Tag("MaintainedByDiffblue")
+  @MethodsUnderTest({"boolean RelationalEvents.isEmpty()"})
+  void testIsEmpty_thenReturnTrue() {
+    // Arrange, Act and Assert
+    assertTrue((new RelationalEvents(new ArrayList<>(), true)).isEmpty());
+  }
+
+  /**
+   * Test {@link RelationalEvents#getParentId()}.
+   * <ul>
+   *   <li>Given {@link ActivityCompletedEvent} (default constructor) ActivityId is {@code 42}.</li>
+   *   <li>Then return {@code 42}.</li>
+   * </ul>
+   * <p>
+   * Method under test: {@link RelationalEvents#getParentId()}
+   */
+  @Test
+  @DisplayName("Test getParentId(); given ActivityCompletedEvent (default constructor) ActivityId is '42'; then return '42'")
+  @Tag("MaintainedByDiffblue")
+  @MethodsUnderTest({"String RelationalEvents.getParentId()"})
+  void testGetParentId_givenActivityCompletedEventActivityIdIs42_thenReturn42() {
+    // Arrange
+    ActivityCompletedEvent activityCompleted = new ActivityCompletedEvent();
+    activityCompleted.setActivityId("42");
+    activityCompleted.setId("42");
+    activityCompleted.setIfCondition("If Condition");
+
+    ActivityExpiredEvent activityExpired = new ActivityExpiredEvent();
+    activityExpired.setActivityId("42");
+    activityExpired.setId("42");
+
+    ActivityFailedEvent activityFailed = new ActivityFailedEvent();
+    activityFailed.setActivityId("42");
+    activityFailed.setId("42");
+
+    ConnectionAcceptedEvent connectionAccepted = new ConnectionAcceptedEvent();
+    connectionAccepted.setId("42");
+
+    ConnectionRequestedEvent connectionRequested = new ConnectionRequestedEvent();
+    connectionRequested.setId("42");
+
+    FormRepliedEvent formReplied = new FormRepliedEvent();
+    formReplied.setExclusive(true);
+    formReplied.setFormId("42");
+    formReplied.setId("42");
+
+    ImCreatedEvent imCreated = new ImCreatedEvent();
+    imCreated.setId("42");
+
+    MessageReceivedEvent messageReceived = new MessageReceivedEvent();
+    messageReceived.setContent("Not all who wander are lost");
+    messageReceived.setId("42");
+    messageReceived.setRequiresBotMention(true);
+
+    MessageSuppressedEvent messageSuppressed = new MessageSuppressedEvent();
+    messageSuppressed.setId("42");
+
+    PostSharedEvent postShared = new PostSharedEvent();
+    postShared.setId("42");
+
+    RequestReceivedEvent requestReceived = new RequestReceivedEvent();
+    requestReceived.setArguments(new HashMap<>());
+    requestReceived.setId("42");
+    requestReceived.setToken("ABC123");
+    requestReceived.setWorkflowId("42");
+
+    RoomCreatedEvent roomCreated = new RoomCreatedEvent();
+    roomCreated.setId("42");
+
+    RoomDeactivatedEvent roomDeactivated = new RoomDeactivatedEvent();
+    roomDeactivated.setId("42");
+
+    RoomMemberDemotedFromOwnerEvent roomMemberDemotedFromOwner = new RoomMemberDemotedFromOwnerEvent();
+    roomMemberDemotedFromOwner.setId("42");
+
+    RoomMemberPromotedToOwnerEvent roomMemberPromotedToOwner = new RoomMemberPromotedToOwnerEvent();
+    roomMemberPromotedToOwner.setId("42");
+
+    RoomReactivatedEvent roomReactivated = new RoomReactivatedEvent();
+    roomReactivated.setId("42");
+
+    RoomUpdatedEvent roomUpdated = new RoomUpdatedEvent();
+    roomUpdated.setId("42");
+
+    TimerFiredEvent timerFired = new TimerFiredEvent();
+    timerFired.setAt("At");
+    timerFired.setId("42");
+    timerFired.setRepeat("Repeat");
+
+    UserJoinedRoomEvent userJoinedRoom = new UserJoinedRoomEvent();
+    userJoinedRoom.setId("42");
+
+    UserLeftRoomEvent userLeftRoom = new UserLeftRoomEvent();
+    userLeftRoom.setId("42");
+
+    UserRequestedToJoinRoomEvent userRequestedJoinRoom = new UserRequestedToJoinRoomEvent();
+    userRequestedJoinRoom.setId("42");
+
+    Event event = new Event();
+    event.setActivityCompleted(activityCompleted);
+    event.setActivityExpired(activityExpired);
+    event.setActivityFailed(activityFailed);
+    event.setAllOf(new ArrayList<>());
+    event.setConnectionAccepted(connectionAccepted);
+    event.setConnectionRequested(connectionRequested);
+    event.setFormReplied(formReplied);
+    event.setImCreated(imCreated);
+    event.setMessageReceived(messageReceived);
+    event.setMessageSuppressed(messageSuppressed);
+    event.setOneOf(new ArrayList<>());
+    event.setPostShared(postShared);
+    event.setRequestReceived(requestReceived);
+    event.setRoomCreated(roomCreated);
+    event.setRoomDeactivated(roomDeactivated);
+    event.setRoomMemberDemotedFromOwner(roomMemberDemotedFromOwner);
+    event.setRoomMemberPromotedToOwner(roomMemberPromotedToOwner);
+    event.setRoomReactivated(roomReactivated);
+    event.setRoomUpdated(roomUpdated);
+    event.setTimerFired(timerFired);
+    event.setUserJoinedRoom(userJoinedRoom);
+    event.setUserLeftRoom(userLeftRoom);
+    event.setUserRequestedJoinRoom(userRequestedJoinRoom);
+
+    ArrayList<Event> events = new ArrayList<>();
+    events.add(event);
+
+    // Act and Assert
+    assertEquals("42", (new RelationalEvents(events, true)).getParentId());
+  }
+
+  /**
+   * Test {@link RelationalEvents#getParentId()}.
+   * <ul>
+   *   <li>Given {@link RelationalEvents#RelationalEvents(List, boolean)} with events is {@link ArrayList#ArrayList()} and parallel is {@code false}.</li>
+   * </ul>
+   * <p>
+   * Method under test: {@link RelationalEvents#getParentId()}
+   */
+  @Test
+  @DisplayName("Test getParentId(); given RelationalEvents(List, boolean) with events is ArrayList() and parallel is 'false'")
+  @Tag("MaintainedByDiffblue")
+  @MethodsUnderTest({"String RelationalEvents.getParentId()"})
+  void testGetParentId_givenRelationalEventsWithEventsIsArrayListAndParallelIsFalse() {
+    // Arrange, Act and Assert
+    assertNull((new RelationalEvents(new ArrayList<>(), false)).getParentId());
+  }
+
+  /**
+   * Test {@link RelationalEvents#getParentId()}.
+   * <ul>
+   *   <li>Then return {@code null}.</li>
+   * </ul>
+   * <p>
+   * Method under test: {@link RelationalEvents#getParentId()}
+   */
+  @Test
+  @DisplayName("Test getParentId(); then return 'null'")
+  @Tag("MaintainedByDiffblue")
+  @MethodsUnderTest({"String RelationalEvents.getParentId()"})
+  void testGetParentId_thenReturnNull() {
+    // Arrange, Act and Assert
+    assertNull((new RelationalEvents(new ArrayList<>(), true)).getParentId());
+  }
+
+  /**
+   * Test {@link RelationalEvents#equals(Object)}, and {@link RelationalEvents#hashCode()}.
+   * <ul>
+   *   <li>When other is equal.</li>
+   *   <li>Then return equal.</li>
+   * </ul>
+   * <p>
+   * Methods under test:
+   * <ul>
+   *   <li>{@link RelationalEvents#equals(Object)}
+   *   <li>{@link RelationalEvents#hashCode()}
+   * </ul>
+   */
+  @Test
+  @DisplayName("Test equals(Object), and hashCode(); when other is equal; then return equal")
+  @Tag("MaintainedByDiffblue")
+  @MethodsUnderTest({"boolean RelationalEvents.equals(Object)", "int RelationalEvents.hashCode()"})
+  void testEqualsAndHashCode_whenOtherIsEqual_thenReturnEqual() {
+    // Arrange
+    RelationalEvents relationalEvents = new RelationalEvents(new ArrayList<>(), true);
+    RelationalEvents relationalEvents2 = new RelationalEvents(new ArrayList<>(), true);
+
+    // Act and Assert
+    assertEquals(relationalEvents, relationalEvents2);
+    int expectedHashCodeResult = relationalEvents.hashCode();
+    assertEquals(expectedHashCodeResult, relationalEvents2.hashCode());
+  }
+
+  /**
+   * Test {@link RelationalEvents#equals(Object)}, and {@link RelationalEvents#hashCode()}.
+   * <ul>
+   *   <li>When other is same.</li>
+   *   <li>Then return equal.</li>
+   * </ul>
+   * <p>
+   * Methods under test:
+   * <ul>
+   *   <li>{@link RelationalEvents#equals(Object)}
+   *   <li>{@link RelationalEvents#hashCode()}
+   * </ul>
+   */
+  @Test
+  @DisplayName("Test equals(Object), and hashCode(); when other is same; then return equal")
+  @Tag("MaintainedByDiffblue")
+  @MethodsUnderTest({"boolean RelationalEvents.equals(Object)", "int RelationalEvents.hashCode()"})
+  void testEqualsAndHashCode_whenOtherIsSame_thenReturnEqual() {
+    // Arrange
+    RelationalEvents relationalEvents = new RelationalEvents(new ArrayList<>(), true);
+
+    // Act and Assert
+    assertEquals(relationalEvents, relationalEvents);
+    int expectedHashCodeResult = relationalEvents.hashCode();
+    assertEquals(expectedHashCodeResult, relationalEvents.hashCode());
+  }
+
+  /**
+   * Test {@link RelationalEvents#equals(Object)}.
+   * <ul>
+   *   <li>When other is different.</li>
+   *   <li>Then return not equal.</li>
+   * </ul>
+   * <p>
+   * Method under test: {@link RelationalEvents#equals(Object)}
+   */
+  @Test
+  @DisplayName("Test equals(Object); when other is different; then return not equal")
+  @Tag("MaintainedByDiffblue")
+  @MethodsUnderTest({"boolean RelationalEvents.equals(Object)", "int RelationalEvents.hashCode()"})
+  void testEquals_whenOtherIsDifferent_thenReturnNotEqual() {
+    // Arrange
+    ActivityCompletedEvent activityCompleted = new ActivityCompletedEvent();
+    activityCompleted.setActivityId("42");
+    activityCompleted.setId("42");
+    activityCompleted.setIfCondition("If Condition");
+
+    ActivityExpiredEvent activityExpired = new ActivityExpiredEvent();
+    activityExpired.setActivityId("42");
+    activityExpired.setId("42");
+
+    ActivityFailedEvent activityFailed = new ActivityFailedEvent();
+    activityFailed.setActivityId("42");
+    activityFailed.setId("42");
+
+    ConnectionAcceptedEvent connectionAccepted = new ConnectionAcceptedEvent();
+    connectionAccepted.setId("42");
+
+    ConnectionRequestedEvent connectionRequested = new ConnectionRequestedEvent();
+    connectionRequested.setId("42");
+
+    FormRepliedEvent formReplied = new FormRepliedEvent();
+    formReplied.setExclusive(true);
+    formReplied.setFormId("42");
+    formReplied.setId("42");
+
+    ImCreatedEvent imCreated = new ImCreatedEvent();
+    imCreated.setId("42");
+
+    MessageReceivedEvent messageReceived = new MessageReceivedEvent();
+    messageReceived.setContent("Not all who wander are lost");
+    messageReceived.setId("42");
+    messageReceived.setRequiresBotMention(true);
+
+    MessageSuppressedEvent messageSuppressed = new MessageSuppressedEvent();
+    messageSuppressed.setId("42");
+
+    PostSharedEvent postShared = new PostSharedEvent();
+    postShared.setId("42");
+
+    RequestReceivedEvent requestReceived = new RequestReceivedEvent();
+    requestReceived.setArguments(new HashMap<>());
+    requestReceived.setId("42");
+    requestReceived.setToken("ABC123");
+    requestReceived.setWorkflowId("42");
+
+    RoomCreatedEvent roomCreated = new RoomCreatedEvent();
+    roomCreated.setId("42");
+
+    RoomDeactivatedEvent roomDeactivated = new RoomDeactivatedEvent();
+    roomDeactivated.setId("42");
+
+    RoomMemberDemotedFromOwnerEvent roomMemberDemotedFromOwner = new RoomMemberDemotedFromOwnerEvent();
+    roomMemberDemotedFromOwner.setId("42");
+
+    RoomMemberPromotedToOwnerEvent roomMemberPromotedToOwner = new RoomMemberPromotedToOwnerEvent();
+    roomMemberPromotedToOwner.setId("42");
+
+    RoomReactivatedEvent roomReactivated = new RoomReactivatedEvent();
+    roomReactivated.setId("42");
+
+    RoomUpdatedEvent roomUpdated = new RoomUpdatedEvent();
+    roomUpdated.setId("42");
+
+    TimerFiredEvent timerFired = new TimerFiredEvent();
+    timerFired.setAt("At");
+    timerFired.setId("42");
+    timerFired.setRepeat("Repeat");
+
+    UserJoinedRoomEvent userJoinedRoom = new UserJoinedRoomEvent();
+    userJoinedRoom.setId("42");
+
+    UserLeftRoomEvent userLeftRoom = new UserLeftRoomEvent();
+    userLeftRoom.setId("42");
+
+    UserRequestedToJoinRoomEvent userRequestedJoinRoom = new UserRequestedToJoinRoomEvent();
+    userRequestedJoinRoom.setId("42");
+
+    Event event = new Event();
+    event.setActivityCompleted(activityCompleted);
+    event.setActivityExpired(activityExpired);
+    event.setActivityFailed(activityFailed);
+    event.setAllOf(new ArrayList<>());
+    event.setConnectionAccepted(connectionAccepted);
+    event.setConnectionRequested(connectionRequested);
+    event.setFormReplied(formReplied);
+    event.setImCreated(imCreated);
+    event.setMessageReceived(messageReceived);
+    event.setMessageSuppressed(messageSuppressed);
+    event.setOneOf(new ArrayList<>());
+    event.setPostShared(postShared);
+    event.setRequestReceived(requestReceived);
+    event.setRoomCreated(roomCreated);
+    event.setRoomDeactivated(roomDeactivated);
+    event.setRoomMemberDemotedFromOwner(roomMemberDemotedFromOwner);
+    event.setRoomMemberPromotedToOwner(roomMemberPromotedToOwner);
+    event.setRoomReactivated(roomReactivated);
+    event.setRoomUpdated(roomUpdated);
+    event.setTimerFired(timerFired);
+    event.setUserJoinedRoom(userJoinedRoom);
+    event.setUserLeftRoom(userLeftRoom);
+    event.setUserRequestedJoinRoom(userRequestedJoinRoom);
+
+    ArrayList<Event> events = new ArrayList<>();
+    events.add(event);
+    RelationalEvents relationalEvents = new RelationalEvents(events, true);
+
+    // Act and Assert
+    assertNotEquals(relationalEvents, new RelationalEvents(new ArrayList<>(), true));
+  }
+
+  /**
+   * Test {@link RelationalEvents#equals(Object)}.
+   * <ul>
+   *   <li>When other is different.</li>
+   *   <li>Then return not equal.</li>
+   * </ul>
+   * <p>
+   * Method under test: {@link RelationalEvents#equals(Object)}
+   */
+  @Test
+  @DisplayName("Test equals(Object); when other is different; then return not equal")
+  @Tag("MaintainedByDiffblue")
+  @MethodsUnderTest({"boolean RelationalEvents.equals(Object)", "int RelationalEvents.hashCode()"})
+  void testEquals_whenOtherIsDifferent_thenReturnNotEqual2() {
+    // Arrange
+    RelationalEvents relationalEvents = new RelationalEvents(new ArrayList<>(), false);
+
+    // Act and Assert
+    assertNotEquals(relationalEvents, new RelationalEvents(new ArrayList<>(), true));
+  }
+
+  /**
+   * Test {@link RelationalEvents#equals(Object)}.
+   * <ul>
+   *   <li>When other is {@code null}.</li>
+   *   <li>Then return not equal.</li>
+   * </ul>
+   * <p>
+   * Method under test: {@link RelationalEvents#equals(Object)}
+   */
+  @Test
+  @DisplayName("Test equals(Object); when other is 'null'; then return not equal")
+  @Tag("MaintainedByDiffblue")
+  @MethodsUnderTest({"boolean RelationalEvents.equals(Object)", "int RelationalEvents.hashCode()"})
+  void testEquals_whenOtherIsNull_thenReturnNotEqual() {
+    // Arrange, Act and Assert
+    assertNotEquals(new RelationalEvents(new ArrayList<>(), true), null);
+  }
+
+  /**
+   * Test {@link RelationalEvents#equals(Object)}.
+   * <ul>
+   *   <li>When other is wrong type.</li>
+   *   <li>Then return not equal.</li>
+   * </ul>
+   * <p>
+   * Method under test: {@link RelationalEvents#equals(Object)}
+   */
+  @Test
+  @DisplayName("Test equals(Object); when other is wrong type; then return not equal")
+  @Tag("MaintainedByDiffblue")
+  @MethodsUnderTest({"boolean RelationalEvents.equals(Object)", "int RelationalEvents.hashCode()"})
+  void testEquals_whenOtherIsWrongType_thenReturnNotEqual() {
+    // Arrange, Act and Assert
+    assertNotEquals(new RelationalEvents(new ArrayList<>(), true), "Different type to RelationalEvents");
+  }
+
+  /**
+   * Test getters and setters.
+   * <p>
+   * Methods under test:
+   * <ul>
+   *   <li>{@link RelationalEvents#RelationalEvents(List, boolean)}
+   *   <li>{@link RelationalEvents#setParentId(String)}
+   *   <li>{@link RelationalEvents#toString()}
+   *   <li>{@link RelationalEvents#getEvents()}
+   *   <li>{@link RelationalEvents#isParallel()}
+   * </ul>
+   */
+  @Test
+  @DisplayName("Test getters and setters")
+  @Tag("MaintainedByDiffblue")
+  @MethodsUnderTest({"void RelationalEvents.<init>(List, boolean)", "List RelationalEvents.getEvents()",
+      "boolean RelationalEvents.isParallel()", "void RelationalEvents.setParentId(String)",
+      "String RelationalEvents.toString()"})
+  void testGettersAndSetters() {
+    // Arrange
+    ArrayList<Event> events = new ArrayList<>();
+
+    // Act
+    RelationalEvents actualRelationalEvents = new RelationalEvents(events, true);
+    actualRelationalEvents.setParentId("42");
+    String actualToStringResult = actualRelationalEvents.toString();
+    List<Event> actualEvents = actualRelationalEvents.getEvents();
+
+    // Assert
+    assertEquals("RelationalEvents(events=[], parallel=true, parentId=42)", actualToStringResult);
+    assertTrue(actualRelationalEvents.isParallel());
+    assertTrue(actualEvents.isEmpty());
+    assertSame(events, actualEvents);
+  }
+}
