@@ -1,0 +1,530 @@
+package com.symphony.bdk.workflow;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import com.symphony.bdk.workflow.engine.WorkflowDirectedGraph;
+import com.symphony.bdk.workflow.exception.NotFoundException;
+import com.symphony.bdk.workflow.swadl.exception.InvalidActivityException;
+import com.symphony.bdk.workflow.swadl.v1.Event;
+import com.symphony.bdk.workflow.swadl.v1.EventWithTimeout;
+import com.symphony.bdk.workflow.swadl.v1.Properties;
+import com.symphony.bdk.workflow.swadl.v1.Workflow;
+import com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity;
+import com.symphony.bdk.workflow.swadl.v1.event.ActivityCompletedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.ActivityExpiredEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.ActivityFailedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.ConnectionAcceptedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.ConnectionRequestedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.FormRepliedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.ImCreatedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.MessageReceivedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.MessageSuppressedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.PostSharedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RequestReceivedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RoomCreatedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RoomDeactivatedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RoomMemberDemotedFromOwnerEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RoomMemberPromotedToOwnerEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RoomReactivatedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.RoomUpdatedEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.TimerFiredEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.UserJoinedRoomEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.UserLeftRoomEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.UserRequestedToJoinRoomEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+class WorkflowValidatorDiffblueTest {
+  /**
+   * Method under test:
+   * {@link WorkflowValidator#validateFirstActivity(BaseActivity, Event, String)}
+   */
+  @Test
+  void testValidateFirstActivity() {
+    // Arrange
+    ActivityCompletedEvent activityCompleted = new ActivityCompletedEvent();
+    activityCompleted.setActivityId("42");
+    activityCompleted.setId("42");
+    activityCompleted.setIfCondition("If Condition");
+
+    ActivityExpiredEvent activityExpired = new ActivityExpiredEvent();
+    activityExpired.setActivityId("42");
+    activityExpired.setId("42");
+
+    ActivityFailedEvent activityFailed = new ActivityFailedEvent();
+    activityFailed.setActivityId("42");
+    activityFailed.setId("42");
+
+    ConnectionAcceptedEvent connectionAccepted = new ConnectionAcceptedEvent();
+    connectionAccepted.setId("42");
+
+    ConnectionRequestedEvent connectionRequested = new ConnectionRequestedEvent();
+    connectionRequested.setId("42");
+
+    FormRepliedEvent formReplied = new FormRepliedEvent();
+    formReplied.setExclusive(true);
+    formReplied.setFormId("42");
+    formReplied.setId("42");
+
+    ImCreatedEvent imCreated = new ImCreatedEvent();
+    imCreated.setId("42");
+
+    MessageReceivedEvent messageReceived = new MessageReceivedEvent();
+    messageReceived.setContent("Not all who wander are lost");
+    messageReceived.setId("42");
+    messageReceived.setRequiresBotMention(true);
+
+    MessageSuppressedEvent messageSuppressed = new MessageSuppressedEvent();
+    messageSuppressed.setId("42");
+
+    PostSharedEvent postShared = new PostSharedEvent();
+    postShared.setId("42");
+
+    RequestReceivedEvent requestReceived = new RequestReceivedEvent();
+    requestReceived.setArguments(new HashMap<>());
+    requestReceived.setId("42");
+    requestReceived.setToken("ABC123");
+    requestReceived.setWorkflowId("42");
+
+    RoomCreatedEvent roomCreated = new RoomCreatedEvent();
+    roomCreated.setId("42");
+
+    RoomDeactivatedEvent roomDeactivated = new RoomDeactivatedEvent();
+    roomDeactivated.setId("42");
+
+    RoomMemberDemotedFromOwnerEvent roomMemberDemotedFromOwner = new RoomMemberDemotedFromOwnerEvent();
+    roomMemberDemotedFromOwner.setId("42");
+
+    RoomMemberPromotedToOwnerEvent roomMemberPromotedToOwner = new RoomMemberPromotedToOwnerEvent();
+    roomMemberPromotedToOwner.setId("42");
+
+    RoomReactivatedEvent roomReactivated = new RoomReactivatedEvent();
+    roomReactivated.setId("42");
+
+    RoomUpdatedEvent roomUpdated = new RoomUpdatedEvent();
+    roomUpdated.setId("42");
+
+    TimerFiredEvent timerFired = new TimerFiredEvent();
+    timerFired.setAt("At");
+    timerFired.setId("42");
+    timerFired.setRepeat("Repeat");
+
+    UserJoinedRoomEvent userJoinedRoom = new UserJoinedRoomEvent();
+    userJoinedRoom.setId("42");
+
+    UserLeftRoomEvent userLeftRoom = new UserLeftRoomEvent();
+    userLeftRoom.setId("42");
+
+    UserRequestedToJoinRoomEvent userRequestedJoinRoom = new UserRequestedToJoinRoomEvent();
+    userRequestedJoinRoom.setId("42");
+
+    EventWithTimeout eventWithTimeout = new EventWithTimeout();
+    eventWithTimeout.setActivityCompleted(activityCompleted);
+    eventWithTimeout.setActivityExpired(activityExpired);
+    eventWithTimeout.setActivityFailed(activityFailed);
+    eventWithTimeout.setAllOf(new ArrayList<>());
+    eventWithTimeout.setConnectionAccepted(connectionAccepted);
+    eventWithTimeout.setConnectionRequested(connectionRequested);
+    eventWithTimeout.setFormReplied(formReplied);
+    eventWithTimeout.setImCreated(imCreated);
+    eventWithTimeout.setMessageReceived(messageReceived);
+    eventWithTimeout.setMessageSuppressed(messageSuppressed);
+    eventWithTimeout.setOneOf(new ArrayList<>());
+    eventWithTimeout.setPostShared(postShared);
+    eventWithTimeout.setRequestReceived(requestReceived);
+    eventWithTimeout.setRoomCreated(roomCreated);
+    eventWithTimeout.setRoomDeactivated(roomDeactivated);
+    eventWithTimeout.setRoomMemberDemotedFromOwner(roomMemberDemotedFromOwner);
+    eventWithTimeout.setRoomMemberPromotedToOwner(roomMemberPromotedToOwner);
+    eventWithTimeout.setRoomReactivated(roomReactivated);
+    eventWithTimeout.setRoomUpdated(roomUpdated);
+    eventWithTimeout.setTimeout("Timeout");
+    eventWithTimeout.setTimerFired(timerFired);
+    eventWithTimeout.setUserJoinedRoom(userJoinedRoom);
+    eventWithTimeout.setUserLeftRoom(userLeftRoom);
+    eventWithTimeout.setUserRequestedJoinRoom(userRequestedJoinRoom);
+    BaseActivity activity = mock(BaseActivity.class);
+    when(activity.getId()).thenReturn("42");
+    when(activity.getOn()).thenReturn(eventWithTimeout);
+
+    ActivityCompletedEvent activityCompleted2 = new ActivityCompletedEvent();
+    activityCompleted2.setActivityId("42");
+    activityCompleted2.setId("42");
+    activityCompleted2.setIfCondition("If Condition");
+
+    ActivityExpiredEvent activityExpired2 = new ActivityExpiredEvent();
+    activityExpired2.setActivityId("42");
+    activityExpired2.setId("42");
+
+    ActivityFailedEvent activityFailed2 = new ActivityFailedEvent();
+    activityFailed2.setActivityId("42");
+    activityFailed2.setId("42");
+
+    ConnectionAcceptedEvent connectionAccepted2 = new ConnectionAcceptedEvent();
+    connectionAccepted2.setId("42");
+
+    ConnectionRequestedEvent connectionRequested2 = new ConnectionRequestedEvent();
+    connectionRequested2.setId("42");
+
+    FormRepliedEvent formReplied2 = new FormRepliedEvent();
+    formReplied2.setExclusive(true);
+    formReplied2.setFormId("42");
+    formReplied2.setId("42");
+
+    ImCreatedEvent imCreated2 = new ImCreatedEvent();
+    imCreated2.setId("42");
+
+    MessageReceivedEvent messageReceived2 = new MessageReceivedEvent();
+    messageReceived2.setContent("Not all who wander are lost");
+    messageReceived2.setId("42");
+    messageReceived2.setRequiresBotMention(true);
+
+    MessageSuppressedEvent messageSuppressed2 = new MessageSuppressedEvent();
+    messageSuppressed2.setId("42");
+
+    PostSharedEvent postShared2 = new PostSharedEvent();
+    postShared2.setId("42");
+
+    RequestReceivedEvent requestReceived2 = new RequestReceivedEvent();
+    requestReceived2.setArguments(new HashMap<>());
+    requestReceived2.setId("42");
+    requestReceived2.setToken("ABC123");
+    requestReceived2.setWorkflowId("42");
+
+    RoomCreatedEvent roomCreated2 = new RoomCreatedEvent();
+    roomCreated2.setId("42");
+
+    RoomDeactivatedEvent roomDeactivated2 = new RoomDeactivatedEvent();
+    roomDeactivated2.setId("42");
+
+    RoomMemberDemotedFromOwnerEvent roomMemberDemotedFromOwner2 = new RoomMemberDemotedFromOwnerEvent();
+    roomMemberDemotedFromOwner2.setId("42");
+
+    RoomMemberPromotedToOwnerEvent roomMemberPromotedToOwner2 = new RoomMemberPromotedToOwnerEvent();
+    roomMemberPromotedToOwner2.setId("42");
+
+    RoomReactivatedEvent roomReactivated2 = new RoomReactivatedEvent();
+    roomReactivated2.setId("42");
+
+    RoomUpdatedEvent roomUpdated2 = new RoomUpdatedEvent();
+    roomUpdated2.setId("42");
+
+    TimerFiredEvent timerFired2 = new TimerFiredEvent();
+    timerFired2.setAt("At");
+    timerFired2.setId("42");
+    timerFired2.setRepeat("Repeat");
+
+    UserJoinedRoomEvent userJoinedRoom2 = new UserJoinedRoomEvent();
+    userJoinedRoom2.setId("42");
+
+    UserLeftRoomEvent userLeftRoom2 = new UserLeftRoomEvent();
+    userLeftRoom2.setId("42");
+
+    UserRequestedToJoinRoomEvent userRequestedJoinRoom2 = new UserRequestedToJoinRoomEvent();
+    userRequestedJoinRoom2.setId("42");
+
+    Event event = new Event();
+    event.setActivityCompleted(activityCompleted2);
+    event.setActivityExpired(activityExpired2);
+    event.setActivityFailed(activityFailed2);
+    event.setAllOf(new ArrayList<>());
+    event.setConnectionAccepted(connectionAccepted2);
+    event.setConnectionRequested(connectionRequested2);
+    event.setFormReplied(formReplied2);
+    event.setImCreated(imCreated2);
+    event.setMessageReceived(messageReceived2);
+    event.setMessageSuppressed(messageSuppressed2);
+    event.setOneOf(new ArrayList<>());
+    event.setPostShared(postShared2);
+    event.setRequestReceived(requestReceived2);
+    event.setRoomCreated(roomCreated2);
+    event.setRoomDeactivated(roomDeactivated2);
+    event.setRoomMemberDemotedFromOwner(roomMemberDemotedFromOwner2);
+    event.setRoomMemberPromotedToOwner(roomMemberPromotedToOwner2);
+    event.setRoomReactivated(roomReactivated2);
+    event.setRoomUpdated(roomUpdated2);
+    event.setTimerFired(timerFired2);
+    event.setUserJoinedRoom(userJoinedRoom2);
+    event.setUserLeftRoom(userLeftRoom2);
+    event.setUserRequestedJoinRoom(userRequestedJoinRoom2);
+
+    // Act and Assert
+    assertThrows(InvalidActivityException.class, () -> WorkflowValidator.validateFirstActivity(activity, event, "42"));
+    verify(activity).getId();
+    verify(activity).getOn();
+  }
+
+  /**
+   * Method under test:
+   * {@link WorkflowValidator#validateFirstActivity(BaseActivity, Event, String)}
+   */
+  @Test
+  void testValidateFirstActivity2() {
+    // Arrange
+    ActivityCompletedEvent activityCompleted = new ActivityCompletedEvent();
+    activityCompleted.setActivityId("42");
+    activityCompleted.setId("42");
+    activityCompleted.setIfCondition("If Condition");
+
+    ActivityExpiredEvent activityExpired = new ActivityExpiredEvent();
+    activityExpired.setActivityId("42");
+    activityExpired.setId("42");
+
+    ActivityFailedEvent activityFailed = new ActivityFailedEvent();
+    activityFailed.setActivityId("42");
+    activityFailed.setId("42");
+
+    ConnectionAcceptedEvent connectionAccepted = new ConnectionAcceptedEvent();
+    connectionAccepted.setId("42");
+
+    ConnectionRequestedEvent connectionRequested = new ConnectionRequestedEvent();
+    connectionRequested.setId("42");
+
+    FormRepliedEvent formReplied = new FormRepliedEvent();
+    formReplied.setExclusive(true);
+    formReplied.setFormId("42");
+    formReplied.setId("42");
+
+    ImCreatedEvent imCreated = new ImCreatedEvent();
+    imCreated.setId("42");
+
+    MessageReceivedEvent messageReceived = new MessageReceivedEvent();
+    messageReceived.setContent("Not all who wander are lost");
+    messageReceived.setId("42");
+    messageReceived.setRequiresBotMention(true);
+
+    MessageSuppressedEvent messageSuppressed = new MessageSuppressedEvent();
+    messageSuppressed.setId("42");
+
+    PostSharedEvent postShared = new PostSharedEvent();
+    postShared.setId("42");
+
+    RequestReceivedEvent requestReceived = new RequestReceivedEvent();
+    requestReceived.setArguments(new HashMap<>());
+    requestReceived.setId("42");
+    requestReceived.setToken("ABC123");
+    requestReceived.setWorkflowId("42");
+
+    RoomCreatedEvent roomCreated = new RoomCreatedEvent();
+    roomCreated.setId("42");
+
+    RoomDeactivatedEvent roomDeactivated = new RoomDeactivatedEvent();
+    roomDeactivated.setId("42");
+
+    RoomMemberDemotedFromOwnerEvent roomMemberDemotedFromOwner = new RoomMemberDemotedFromOwnerEvent();
+    roomMemberDemotedFromOwner.setId("42");
+
+    RoomMemberPromotedToOwnerEvent roomMemberPromotedToOwner = new RoomMemberPromotedToOwnerEvent();
+    roomMemberPromotedToOwner.setId("42");
+
+    RoomReactivatedEvent roomReactivated = new RoomReactivatedEvent();
+    roomReactivated.setId("42");
+
+    RoomUpdatedEvent roomUpdated = new RoomUpdatedEvent();
+    roomUpdated.setId("42");
+
+    TimerFiredEvent timerFired = new TimerFiredEvent();
+    timerFired.setAt("At");
+    timerFired.setId("42");
+    timerFired.setRepeat("Repeat");
+
+    UserJoinedRoomEvent userJoinedRoom = new UserJoinedRoomEvent();
+    userJoinedRoom.setId("42");
+
+    UserLeftRoomEvent userLeftRoom = new UserLeftRoomEvent();
+    userLeftRoom.setId("42");
+
+    UserRequestedToJoinRoomEvent userRequestedJoinRoom = new UserRequestedToJoinRoomEvent();
+    userRequestedJoinRoom.setId("42");
+
+    EventWithTimeout eventWithTimeout = new EventWithTimeout();
+    eventWithTimeout.setActivityCompleted(activityCompleted);
+    eventWithTimeout.setActivityExpired(activityExpired);
+    eventWithTimeout.setActivityFailed(activityFailed);
+    eventWithTimeout.setAllOf(new ArrayList<>());
+    eventWithTimeout.setConnectionAccepted(connectionAccepted);
+    eventWithTimeout.setConnectionRequested(connectionRequested);
+    eventWithTimeout.setFormReplied(formReplied);
+    eventWithTimeout.setImCreated(imCreated);
+    eventWithTimeout.setMessageReceived(messageReceived);
+    eventWithTimeout.setMessageSuppressed(messageSuppressed);
+    eventWithTimeout.setOneOf(new ArrayList<>());
+    eventWithTimeout.setPostShared(postShared);
+    eventWithTimeout.setRequestReceived(requestReceived);
+    eventWithTimeout.setRoomCreated(roomCreated);
+    eventWithTimeout.setRoomDeactivated(roomDeactivated);
+    eventWithTimeout.setRoomMemberDemotedFromOwner(roomMemberDemotedFromOwner);
+    eventWithTimeout.setRoomMemberPromotedToOwner(roomMemberPromotedToOwner);
+    eventWithTimeout.setRoomReactivated(roomReactivated);
+    eventWithTimeout.setRoomUpdated(roomUpdated);
+    eventWithTimeout.setTimeout("Timeout");
+    eventWithTimeout.setTimerFired(timerFired);
+    eventWithTimeout.setUserJoinedRoom(userJoinedRoom);
+    eventWithTimeout.setUserLeftRoom(userLeftRoom);
+    eventWithTimeout.setUserRequestedJoinRoom(userRequestedJoinRoom);
+    BaseActivity activity = mock(BaseActivity.class);
+    when(activity.getId()).thenThrow(new InvalidActivityException("42", "An error occurred"));
+    when(activity.getOn()).thenReturn(eventWithTimeout);
+
+    ActivityCompletedEvent activityCompleted2 = new ActivityCompletedEvent();
+    activityCompleted2.setActivityId("42");
+    activityCompleted2.setId("42");
+    activityCompleted2.setIfCondition("If Condition");
+
+    ActivityExpiredEvent activityExpired2 = new ActivityExpiredEvent();
+    activityExpired2.setActivityId("42");
+    activityExpired2.setId("42");
+
+    ActivityFailedEvent activityFailed2 = new ActivityFailedEvent();
+    activityFailed2.setActivityId("42");
+    activityFailed2.setId("42");
+
+    ConnectionAcceptedEvent connectionAccepted2 = new ConnectionAcceptedEvent();
+    connectionAccepted2.setId("42");
+
+    ConnectionRequestedEvent connectionRequested2 = new ConnectionRequestedEvent();
+    connectionRequested2.setId("42");
+
+    FormRepliedEvent formReplied2 = new FormRepliedEvent();
+    formReplied2.setExclusive(true);
+    formReplied2.setFormId("42");
+    formReplied2.setId("42");
+
+    ImCreatedEvent imCreated2 = new ImCreatedEvent();
+    imCreated2.setId("42");
+
+    MessageReceivedEvent messageReceived2 = new MessageReceivedEvent();
+    messageReceived2.setContent("Not all who wander are lost");
+    messageReceived2.setId("42");
+    messageReceived2.setRequiresBotMention(true);
+
+    MessageSuppressedEvent messageSuppressed2 = new MessageSuppressedEvent();
+    messageSuppressed2.setId("42");
+
+    PostSharedEvent postShared2 = new PostSharedEvent();
+    postShared2.setId("42");
+
+    RequestReceivedEvent requestReceived2 = new RequestReceivedEvent();
+    requestReceived2.setArguments(new HashMap<>());
+    requestReceived2.setId("42");
+    requestReceived2.setToken("ABC123");
+    requestReceived2.setWorkflowId("42");
+
+    RoomCreatedEvent roomCreated2 = new RoomCreatedEvent();
+    roomCreated2.setId("42");
+
+    RoomDeactivatedEvent roomDeactivated2 = new RoomDeactivatedEvent();
+    roomDeactivated2.setId("42");
+
+    RoomMemberDemotedFromOwnerEvent roomMemberDemotedFromOwner2 = new RoomMemberDemotedFromOwnerEvent();
+    roomMemberDemotedFromOwner2.setId("42");
+
+    RoomMemberPromotedToOwnerEvent roomMemberPromotedToOwner2 = new RoomMemberPromotedToOwnerEvent();
+    roomMemberPromotedToOwner2.setId("42");
+
+    RoomReactivatedEvent roomReactivated2 = new RoomReactivatedEvent();
+    roomReactivated2.setId("42");
+
+    RoomUpdatedEvent roomUpdated2 = new RoomUpdatedEvent();
+    roomUpdated2.setId("42");
+
+    TimerFiredEvent timerFired2 = new TimerFiredEvent();
+    timerFired2.setAt("At");
+    timerFired2.setId("42");
+    timerFired2.setRepeat("Repeat");
+
+    UserJoinedRoomEvent userJoinedRoom2 = new UserJoinedRoomEvent();
+    userJoinedRoom2.setId("42");
+
+    UserLeftRoomEvent userLeftRoom2 = new UserLeftRoomEvent();
+    userLeftRoom2.setId("42");
+
+    UserRequestedToJoinRoomEvent userRequestedJoinRoom2 = new UserRequestedToJoinRoomEvent();
+    userRequestedJoinRoom2.setId("42");
+
+    Event event = new Event();
+    event.setActivityCompleted(activityCompleted2);
+    event.setActivityExpired(activityExpired2);
+    event.setActivityFailed(activityFailed2);
+    event.setAllOf(new ArrayList<>());
+    event.setConnectionAccepted(connectionAccepted2);
+    event.setConnectionRequested(connectionRequested2);
+    event.setFormReplied(formReplied2);
+    event.setImCreated(imCreated2);
+    event.setMessageReceived(messageReceived2);
+    event.setMessageSuppressed(messageSuppressed2);
+    event.setOneOf(new ArrayList<>());
+    event.setPostShared(postShared2);
+    event.setRequestReceived(requestReceived2);
+    event.setRoomCreated(roomCreated2);
+    event.setRoomDeactivated(roomDeactivated2);
+    event.setRoomMemberDemotedFromOwner(roomMemberDemotedFromOwner2);
+    event.setRoomMemberPromotedToOwner(roomMemberPromotedToOwner2);
+    event.setRoomReactivated(roomReactivated2);
+    event.setRoomUpdated(roomUpdated2);
+    event.setTimerFired(timerFired2);
+    event.setUserJoinedRoom(userJoinedRoom2);
+    event.setUserLeftRoom(userLeftRoom2);
+    event.setUserRequestedJoinRoom(userRequestedJoinRoom2);
+
+    // Act and Assert
+    assertThrows(InvalidActivityException.class, () -> WorkflowValidator.validateFirstActivity(activity, event, "42"));
+    verify(activity).getId();
+    verify(activity).getOn();
+  }
+
+  /**
+   * Method under test:
+   * {@link WorkflowValidator#validateActivityCompletedNodeId(String, String, Workflow)}
+   */
+  @Test
+  void testValidateActivityCompletedNodeId() {
+    // Arrange
+    Properties properties = new Properties();
+    properties.setPublish(true);
+
+    Workflow workflow = new Workflow();
+    workflow.setActivities(new ArrayList<>());
+    workflow.setId("42");
+    workflow.setProperties(properties);
+    workflow.setVariables(new HashMap<>());
+    workflow.setVersion(1L);
+
+    // Act and Assert
+    assertThrows(NotFoundException.class,
+        () -> WorkflowValidator.validateActivityCompletedNodeId("42", "42", workflow));
+  }
+
+  /**
+   * Method under test:
+   * {@link WorkflowValidator#validateExistingNodeId(String, String, String, WorkflowDirectedGraph)}
+   */
+  @Test
+  void testValidateExistingNodeId() {
+    // Arrange, Act and Assert
+    assertThrows(NotFoundException.class,
+        () -> WorkflowValidator.validateExistingNodeId("42", "42", "42", new WorkflowDirectedGraph("42")));
+  }
+
+  /**
+   * Method under test:
+   * {@link WorkflowValidator#validateExistingNodeId(String, String, String, WorkflowDirectedGraph)}
+   */
+  @Test
+  void testValidateExistingNodeId2() {
+    // Arrange
+    WorkflowDirectedGraph graph = mock(WorkflowDirectedGraph.class);
+    when(graph.hasSeenBefore(Mockito.<String>any())).thenReturn(true);
+
+    // Act
+    WorkflowValidator.validateExistingNodeId("42", "42", "42", graph);
+
+    // Assert that nothing has changed
+    verify(graph).hasSeenBefore(eq("42"));
+  }
+}

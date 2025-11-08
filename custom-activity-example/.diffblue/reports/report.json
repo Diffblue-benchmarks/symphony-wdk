@@ -1,0 +1,128 @@
+{
+  "meta" : {
+    "reportVersion" : "2.6"
+  },
+  "run" : {
+    "version" : "2024.10.01-2ee2e3d-licensed",
+    "creationTimestamp" : "2025-11-08T17:23:33.018776803Z",
+    "command" : "dcover create --coverage-reports --upload http://localhost:8080 --project-name symphony-wdk --name with-diffblue-tests",
+    "totalTime" : 6199.369,
+    "environmentDetectionTime" : 0.263,
+    "indexingTime" : 0.337,
+    "entryPointsTime" : 0.26,
+    "generationTime" : 4135.814,
+    "timeToFirstTest" : 98.359,
+    "timeToLastTest" : 205.3,
+    "indexQueryTime" : 2.287,
+    "verificationTime" : 338.023,
+    "validationTime" : 38.361
+  },
+  "codes" : {
+    "R005" : "Unable to load class",
+    "T000" : "Method eligible for test creation",
+    "T001" : "Trivial getter",
+    "T002" : "Trivial setter",
+    "T005" : "Trivial constructor",
+    "V000" : "Validated successfully",
+    "V003" : "Tests discarded during validation"
+  },
+  "summary" : {
+    "classesCount" : 2,
+    "methodsCount" : 5,
+    "cumulativeDiffblueTestCount" : 0,
+    "cumulativeManualTestCount" : 0,
+    "completeTestCount" : 0,
+    "incompleteTestCount" : 0,
+    "skeletonTestCount" : 0,
+    "totalPhysicalLineCount" : 21,
+    "perMethodTestability" : {
+      "T000" : 1,
+      "T001" : 1,
+      "T002" : 1,
+      "T005" : 2
+    },
+    "perMethodOutcome" : {
+      "R005" : 5
+    },
+    "perTestValidation" : {
+      "V000" : 1119,
+      "V003" : 1
+    }
+  },
+  "classes" : {
+    "org.acme.workflow.MyActivity" : {
+      "methodsCount" : 3,
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T001" : 1,
+        "T002" : 1,
+        "T005" : 1
+      },
+      "perMethodOutcome" : {
+        "R005" : 3
+      }
+    },
+    "org.acme.workflow.MyActivityExecutor" : {
+      "methodsCount" : 2,
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : {
+        "T000" : 1,
+        "T005" : 1
+      },
+      "perMethodOutcome" : {
+        "R005" : 2
+      }
+    }
+  },
+  "methods" : {
+    "org.acme.workflow.MyActivity.<init>:()V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "R005",
+      "lineNumbers" : [
+        5
+      ]
+    },
+    "org.acme.workflow.MyActivity.getMyParameter:()Ljava/lang/String;" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T001",
+      "perMethodOutcome" : "R005",
+      "lineNumbers" : [
+        9
+      ]
+    },
+    "org.acme.workflow.MyActivity.setMyParameter:(Ljava/lang/String;)V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T002",
+      "perMethodOutcome" : "R005",
+      "lineNumbers" : [
+        13,
+        14
+      ]
+    },
+    "org.acme.workflow.MyActivityExecutor.<init>:()V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T005",
+      "perMethodOutcome" : "R005",
+      "lineNumbers" : [
+        11
+      ]
+    },
+    "org.acme.workflow.MyActivityExecutor.execute:(Lcom/symphony/bdk/workflow/engine/executor/ActivityExecutorContext;)V" : {
+      "completeTestCount" : 0,
+      "incompleteTestCount" : 0,
+      "perMethodTestability" : "T000",
+      "perMethodOutcome" : "R005",
+      "lineNumbers" : [
+        15,
+        16
+      ]
+    }
+  }
+}
