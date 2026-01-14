@@ -1,0 +1,75 @@
+package com.symphony.bdk.workflow.engine.executor.message;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import com.symphony.bdk.workflow.engine.executor.ActivityExecutorContext;
+import com.symphony.bdk.workflow.swadl.v1.activity.message.GetMessages;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+@ContextConfiguration(classes = {GetMessagesExecutor.class})
+@ExtendWith(SpringExtension.class)
+class GetMessagesExecutorDiffblueTest {
+  @Autowired private GetMessagesExecutor getMessagesExecutor;
+
+  /**
+   * Test {@link GetMessagesExecutor#execute(ActivityExecutorContext)}.
+   *
+   * <ul>
+   *   <li>Given {@link GetMessages} (default constructor) StreamId is {@code Activity}.
+   *   <li>Then calls {@link ActivityExecutorContext#getActivity()}.
+   * </ul>
+   *
+   * <p>Method under test: {@link GetMessagesExecutor#execute(ActivityExecutorContext)}
+   */
+  @Test
+  @DisplayName(
+      "Test execute(ActivityExecutorContext); given GetMessages (default constructor) StreamId is 'Activity'; then calls getActivity()")
+  @Tag("MaintainedByDiffblue")
+  void testExecute_givenGetMessagesStreamIdIsActivity_thenCallsGetActivity() {
+    // Arrange
+    GetMessages getMessages = new GetMessages();
+    getMessages.setStreamId("Activity");
+
+    ActivityExecutorContext<GetMessages> context = mock(ActivityExecutorContext.class);
+    when(context.getActivity()).thenReturn(getMessages);
+
+    // Act
+    getMessagesExecutor.execute(context);
+
+    // Assert
+    verify(context).getActivity();
+  }
+
+  /**
+   * Test {@link GetMessagesExecutor#execute(ActivityExecutorContext)}.
+   *
+   * <ul>
+   *   <li>Given {@link GetMessages} (default constructor).
+   *   <li>Then calls {@link ActivityExecutorContext#getActivity()}.
+   * </ul>
+   *
+   * <p>Method under test: {@link GetMessagesExecutor#execute(ActivityExecutorContext)}
+   */
+  @Test
+  @DisplayName(
+      "Test execute(ActivityExecutorContext); given GetMessages (default constructor); then calls getActivity()")
+  @Tag("MaintainedByDiffblue")
+  void testExecute_givenGetMessages_thenCallsGetActivity() {
+    // Arrange
+    ActivityExecutorContext<GetMessages> context = mock(ActivityExecutorContext.class);
+    when(context.getActivity()).thenReturn(new GetMessages());
+
+    // Act
+    getMessagesExecutor.execute(context);
+
+    // Assert
+    verify(context).getActivity();
+  }
+}
