@@ -1,1 +1,0 @@
-Hello ${variables.val}!

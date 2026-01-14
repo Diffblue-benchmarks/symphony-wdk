@@ -1,9 +1,0 @@
-id: create-room-invalid-workflow
-activities:
-  - create-room:
-      id: "create-room-invalid"
-      on:
-        message-received:
-          content: "/create-room-invalid"
-      room-description: "this is room description"
-      public: false

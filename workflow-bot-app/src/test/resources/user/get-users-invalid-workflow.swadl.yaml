@@ -1,8 +1,0 @@
-id: get-users-invalid-workflow
-activities:
-  - get-users:
-      id: get
-      on:
-        message-received:
-          content: /get-users-invalid-workflow
-      active: false

@@ -1,8 +1,0 @@
-id: on-room-member-promoted-to-owner
-activities:
-  - execute-script:
-      id: doIt
-      on:
-        room-member-promoted-to-owner:  { }
-      script: |
-        assert event.source.stream.streamId == "123"

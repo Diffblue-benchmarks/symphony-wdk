@@ -1,8 +1,0 @@
-id: on-room-updated
-activities:
-  - execute-script:
-      id: doIt
-      on:
-        room-updated: { }
-      script: |
-        assert event.source.stream.streamId == "123"

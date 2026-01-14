@@ -1,8 +1,0 @@
-id: on-connection-requested
-activities:
-  - execute-script:
-      id: doIt
-      on:
-        connection-requested: { }
-      script: |
-        assert event.source.toUser.userId == 123

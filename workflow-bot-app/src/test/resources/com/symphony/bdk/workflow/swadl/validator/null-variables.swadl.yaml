@@ -1,6 +1,0 @@
-id: test
-variables:
-activities:
-  - send-message:
-      id: test
-      content: Test
