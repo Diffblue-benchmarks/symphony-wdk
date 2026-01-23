@@ -28,8 +28,8 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.13.4")
     testImplementation("org.mockito:mockito-core:5.20.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.20.0")
-    compileOnly("com.diffblue.cover:cover-annotations:1.7.0")
-    testImplementation("com.diffblue.cover:cover-annotations:1.7.0")
+    compileOnly("com.diffblue.cover:cover-annotations:1.9.0")
+    testImplementation("com.diffblue.cover:cover-annotations:1.9.0")
 }
 
 // package the activity and its dependencies so it can be added to a workflow-bot application

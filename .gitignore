@@ -117,3 +117,9 @@ datafeed.id
 data/*
 .java-version
 *-private.yaml
+
+.diffblue/cache
+**.diffblue/cache
+**/.diffblue/cache
+**/**.diffblue/cache
+**/**/.diffblue/cache

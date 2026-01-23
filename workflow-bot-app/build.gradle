@@ -77,8 +77,8 @@ dependencies {
         exclude group: 'org.slf4j', module: 'slf4j-api'
     }
     testImplementation("org.junit.vintage:junit-vintage-engine:5.10.1")
-    compileOnly("com.diffblue.cover:cover-annotations:1.7.0")
-    testImplementation("com.diffblue.cover:cover-annotations:1.7.0")
+    compileOnly("com.diffblue.cover:cover-annotations:1.9.0")
+    testImplementation("com.diffblue.cover:cover-annotations:1.9.0")
 }
 
 bootJar {
