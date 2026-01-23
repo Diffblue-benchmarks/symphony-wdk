@@ -1,35 +1,16 @@
 package com.symphony.bdk.workflow.converter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
 import com.symphony.bdk.workflow.engine.camunda.monitoring.converter.WorkflowInstDomainVersionConverter;
 import com.symphony.bdk.workflow.monitoring.repository.domain.WorkflowInstanceDomain;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.camunda.bpm.engine.impl.persistence.entity.HistoricProcessInstanceEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ContextConfiguration(classes = {WorkflowInstDomainVersionConverter.class})
-@ExtendWith(SpringExtension.class)
 class BiConverterDiffblueTest {
-  @Autowired
-  private BiConverter<HistoricProcessInstanceEntity, Map<String, String>, WorkflowInstanceDomain>
-      biConverter;
-
   /**
    * Test {@link BiConverter#getSourceClass()}.
    *
@@ -76,62 +57,5 @@ class BiConverterDiffblueTest {
     // Assert
     Class<WorkflowInstanceDomain> expectedTargetClass = WorkflowInstanceDomain.class;
     assertEquals(expectedTargetClass, actualTargetClass);
-  }
-
-  /**
-   * Test {@link BiConverter#applyCollection(List, Object)}.
-   *
-   * <p>Method under test: {@link BiConverter#applyCollection(List, Object)}
-   */
-  @Test
-  @DisplayName("Test applyCollection(List, Object)")
-  @Tag("ContributionFromDiffblue")
-  @ManagedByDiffblue
-  @MethodsUnderTest({"List BiConverter.applyCollection(List, Object)"})
-  void testApplyCollection() {
-    // Arrange
-    BiConverter<HistoricProcessInstanceEntity, Map<String, String>, WorkflowInstanceDomain>
-        biConverter = mock(BiConverter.class);
-    when(biConverter.applyCollection(
-            Mockito.<List<HistoricProcessInstanceEntity>>any(), Mockito.<Map<String, String>>any()))
-        .thenReturn(new ArrayList<>());
-
-    ArrayList<HistoricProcessInstanceEntity> source = new ArrayList<>();
-    source.add(new HistoricProcessInstanceEntity());
-
-    // Act
-    biConverter.applyCollection(source, new HashMap<>());
-
-    // Assert
-    verify(biConverter).applyCollection(isA(List.class), isA(Map.class));
-  }
-
-  /**
-   * Test {@link BiConverter#applyCollection(List, Object)}.
-   *
-   * <p>Method under test: {@link BiConverter#applyCollection(List, Object)}
-   */
-  @Test
-  @DisplayName("Test applyCollection(List, Object)")
-  @Tag("ContributionFromDiffblue")
-  @ManagedByDiffblue
-  @MethodsUnderTest({"List BiConverter.applyCollection(List, Object)"})
-  void testApplyCollection2() {
-    // Arrange
-    BiConverter<HistoricProcessInstanceEntity, Map<String, String>, WorkflowInstanceDomain>
-        biConverter = mock(BiConverter.class);
-    when(biConverter.applyCollection(
-            Mockito.<List<HistoricProcessInstanceEntity>>any(), Mockito.<Map<String, String>>any()))
-        .thenReturn(new ArrayList<>());
-
-    ArrayList<HistoricProcessInstanceEntity> source = new ArrayList<>();
-    source.add(new HistoricProcessInstanceEntity());
-    source.add(new HistoricProcessInstanceEntity());
-
-    // Act
-    biConverter.applyCollection(source, new HashMap<>());
-
-    // Assert
-    verify(biConverter).applyCollection(isA(List.class), isA(Map.class));
   }
 }

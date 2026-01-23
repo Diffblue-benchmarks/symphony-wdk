@@ -966,6 +966,86 @@ class WorkflowManagementServiceDiffblueTest {
     versionedWorkflow.setVersion(1L);
     versionedWorkflow.setWorkflowId("42");
     Optional<VersionedWorkflow> ofResult = Optional.of(versionedWorkflow);
+    when(versionedWorkflowRepository.findByWorkflowIdAndActiveTrue(Mockito.<String>any()))
+        .thenThrow(new NotFoundException("An error occurred"));
+    when(versionedWorkflowRepository.findTopByWorkflowIdOrderByVersionDesc(Mockito.<String>any()))
+        .thenReturn(ofResult);
+
+    Properties properties2 = new Properties();
+    properties2.setPublish(true);
+
+    Workflow workflow2 = new Workflow();
+    workflow2.setActivities(new ArrayList<>());
+    workflow2.setId("42");
+    workflow2.setProperties(properties2);
+    workflow2.setVariables(new HashMap<>());
+    workflow2.setVersion(1L);
+    when(objectConverter.convert(Mockito.<Object>any(), eq(Workflow.class))).thenReturn(workflow2);
+
+    // Act and Assert
+    assertThrows(
+        NotFoundException.class,
+        () ->
+            workflowManagementService.update(
+                SwadlView.builder()
+                    .createdBy(1L)
+                    .description("The characteristics of someone or something")
+                    .swadl("Swadl")
+                    .build()));
+    verify(objectConverter).convert(isA(Object.class), isA(Class.class));
+    verify(workflowEngine).deploy(isA(CamundaTranslatedWorkflowContext.class));
+    verify(workflowEngine).translate(isA(Workflow.class));
+    verify(versionedWorkflowRepository).findByWorkflowIdAndActiveTrue("42");
+    verify(versionedWorkflowRepository).findTopByWorkflowIdOrderByVersionDesc("42");
+  }
+
+  /**
+   * Test {@link WorkflowManagementService#update(SwadlView)}.
+   *
+   * <p>Method under test: {@link WorkflowManagementService#update(SwadlView)}
+   */
+  @Test
+  @DisplayName("Test update(SwadlView)")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({"void WorkflowManagementService.update(SwadlView)"})
+  void testUpdate5() {
+    // Arrange
+    Properties properties = new Properties();
+    properties.setPublish(true);
+
+    Workflow workflow = new Workflow();
+    workflow.setActivities(new ArrayList<>());
+    workflow.setId("42");
+    workflow.setProperties(properties);
+    workflow.setVariables(new HashMap<>());
+    workflow.setVersion(1L);
+    WorkflowDirectedGraph workflowDirectedGraph = new WorkflowDirectedGraph("42");
+    ModelImpl model = new ModelImpl("Model Name");
+    ModelBuilderImpl modelBuilder = new ModelBuilderImpl("Model Name");
+
+    BpmnModelInstanceImpl instance =
+        new BpmnModelInstanceImpl(model, modelBuilder, new DomDocumentImpl(null));
+
+    CamundaTranslatedWorkflowContext camundaTranslatedWorkflowContext =
+        new CamundaTranslatedWorkflowContext(workflow, workflowDirectedGraph, instance);
+    when(workflowEngine.translate(Mockito.<Workflow>any()))
+        .thenReturn(camundaTranslatedWorkflowContext);
+    when(workflowEngine.deploy(Mockito.<CamundaTranslatedWorkflowContext>any()))
+        .thenReturn("Deploy");
+
+    VersionedWorkflow versionedWorkflow = new VersionedWorkflow();
+    versionedWorkflow.setActive(true);
+    versionedWorkflow.setCreatedBy(1L);
+    versionedWorkflow.setDeploymentId("42");
+    versionedWorkflow.setDescription("The characteristics of someone or something");
+    versionedWorkflow.setEtag(1L);
+    versionedWorkflow.setId("42");
+    versionedWorkflow.setPublished(false);
+    versionedWorkflow.setSwadl("Swadl");
+    versionedWorkflow.setVersion(1L);
+    versionedWorkflow.setWorkflowId("42");
+    Optional<VersionedWorkflow> ofResult = Optional.of(versionedWorkflow);
 
     VersionedWorkflow versionedWorkflow2 = new VersionedWorkflow();
     versionedWorkflow2.setActive(true);
@@ -1025,7 +1105,7 @@ class WorkflowManagementServiceDiffblueTest {
   @Tag("ContributionFromDiffblue")
   @ManagedByDiffblue
   @MethodsUnderTest({"void WorkflowManagementService.update(SwadlView)"})
-  void testUpdate5() {
+  void testUpdate6() {
     // Arrange
     Properties properties = new Properties();
     properties.setPublish(true);

@@ -7,7 +7,6 @@ import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.symphony.bdk.app.spring.exception.GlobalControllerExceptionHandler;
-import com.symphony.bdk.core.auth.jwt.UserClaim;
 import com.symphony.bdk.core.service.session.SessionService;
 import com.symphony.bdk.core.service.user.UserService;
 import com.symphony.bdk.gen.api.model.UserSearchQuery;
@@ -110,33 +109,6 @@ class SymphonyClientDiffblueTest {
             content()
                 .string(
                     "{\"type\":\"about:blank\",\"title\":\"OK\",\"status\":200,\"instance\":\"/bdk/v1/app/info\"}"));
-  }
-
-  /**
-   * Test {@link SymphonyClient#getProfile(UserClaim)}.
-   *
-   * <p>Method under test: {@link SymphonyClient#getProfile(UserClaim)}
-   */
-  @Test
-  @DisplayName("Test getProfile(UserClaim)")
-  @Tag("ContributionFromDiffblue")
-  @ManagedByDiffblue
-  @MethodsUnderTest({"com.symphony.devsol.model.wdk.Profile SymphonyClient.getProfile(UserClaim)"})
-  void testGetProfile() throws Exception {
-    // Arrange
-    MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/symphony/profile");
-
-    // Act and Assert
-    MockMvcBuilders.standaloneSetup(symphonyClient)
-        .setControllerAdvice(globalControllerExceptionHandler)
-        .build()
-        .perform(requestBuilder)
-        .andExpect(status().is(400))
-        .andExpect(content().contentType("application/problem+json"))
-        .andExpect(
-            content()
-                .string(
-                    "{\"type\":\"about:blank\",\"title\":\"Bad Request\",\"status\":400,\"instance\":\"/symphony/profile\"}"));
   }
 
   /**
