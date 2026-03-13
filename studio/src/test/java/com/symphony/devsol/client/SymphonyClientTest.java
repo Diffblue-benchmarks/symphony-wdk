@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -16,6 +17,7 @@ import com.symphony.devsol.model.wdk.SimpleUser;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -145,5 +147,30 @@ class SymphonyClientTest {
     assertThat(result, hasSize(1));
     assertThat(result.get(0).getId(), equalTo(1L));
     assertThat(result.get(0).getDisplayName(), equalTo("John"));
+  }
+
+  @Test
+  void shouldReturnUserWhenUserIdExists() {
+    UserV2 user = new UserV2().id(123L).displayName("John Doe");
+    when(userService.listUsersByIds(List.of(123L)))
+        .thenReturn(Collections.singletonList(user));
+
+    SimpleUser result = symphonyClient.getSymphonyUser(123L);
+
+    assertThat(result.getId(), equalTo(123L));
+    assertThat(result.getDisplayName(), equalTo("John Doe"));
+  }
+
+  @Test
+  void shouldThrowNotFoundExceptionWhenUserIdDoesNotExist() {
+    when(userService.listUsersByIds(List.of(999L)))
+        .thenReturn(Collections.emptyList());
+
+    ResponseStatusException exception = assertThrows(
+        ResponseStatusException.class,
+        () -> symphonyClient.getSymphonyUser(999L)
+    );
+
+    assertThat(exception.getStatusCode().value(), equalTo(404));
   }
 }
