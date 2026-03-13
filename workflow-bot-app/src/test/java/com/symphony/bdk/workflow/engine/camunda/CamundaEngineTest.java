@@ -316,4 +316,141 @@ class CamundaEngineTest {
     verify(auditTrailLogger).undeployed(deployment1);
     verify(auditTrailLogger).undeployed(deployment2);
   }
+
+  @Test
+  void shouldThrowNotFoundExceptionWhenWorkflowNotFound() {
+    // Arrange
+    String workflowId = "non-existent-workflow";
+    ExecutionParameters parameters = new ExecutionParameters(new HashMap<>(), null);
+
+    when(repositoryService.createProcessDefinitionQuery()).thenReturn(processDefinitionQuery);
+    when(processDefinitionQuery.active()).thenReturn(processDefinitionQuery);
+    when(processDefinitionQuery.list()).thenReturn(List.of());
+
+    // Act & Assert
+    org.junit.jupiter.api.Assertions.assertThrows(
+        com.symphony.bdk.workflow.exception.NotFoundException.class,
+        () -> camundaEngine.execute(workflowId, parameters),
+        "No workflow found with id " + workflowId
+    );
+  }
+
+  @Test
+  void shouldThrowNotFoundExceptionWhenWorkflowIdDoesNotMatch() {
+    // Arrange
+    String requestedWorkflowId = "requested-workflow";
+    String existingWorkflowId = "existing-workflow";
+    ExecutionParameters parameters = new ExecutionParameters(new HashMap<>(), null);
+
+    when(repositoryService.createProcessDefinitionQuery()).thenReturn(processDefinitionQuery);
+    when(processDefinitionQuery.active()).thenReturn(processDefinitionQuery);
+    when(processDefinitionQuery.list()).thenReturn(List.of(processDefinition));
+    when(processDefinition.getName()).thenReturn(existingWorkflowId);
+
+    // Act & Assert
+    org.junit.jupiter.api.Assertions.assertThrows(
+        com.symphony.bdk.workflow.exception.NotFoundException.class,
+        () -> camundaEngine.execute(requestedWorkflowId, parameters),
+        "No workflow found with id " + requestedWorkflowId
+    );
+  }
+
+  @Test
+  void shouldThrowUnauthorizedExceptionWhenTokenMismatch() {
+    // Arrange
+    String workflowId = "test-workflow";
+    String deployedToken = "deployed-token";
+    String requestToken = "different-token";
+    ExecutionParameters parameters = new ExecutionParameters(new HashMap<>(), requestToken);
+
+    when(repositoryService.createProcessDefinitionQuery()).thenReturn(processDefinitionQuery);
+    when(processDefinitionQuery.active()).thenReturn(processDefinitionQuery);
+    when(processDefinitionQuery.list()).thenReturn(List.of(processDefinition));
+    when(processDefinition.getName()).thenReturn(workflowId);
+    when(processDefinition.getDeploymentId()).thenReturn("deployment-id");
+    when(repositoryService.getDeploymentResources("deployment-id")).thenReturn(List.of(resource));
+    when(resource.getName()).thenReturn(CamundaBpmnBuilder.DEPLOYMENT_RESOURCE_TOKEN_KEY);
+    when(resource.getBytes()).thenReturn(deployedToken.getBytes(StandardCharsets.UTF_8));
+
+    // Act & Assert
+    org.junit.jupiter.api.Assertions.assertThrows(
+        com.symphony.bdk.workflow.exception.UnauthorizedException.class,
+        () -> camundaEngine.execute(workflowId, parameters),
+        "Request is not authorised"
+    );
+  }
+
+  @Test
+  void shouldThrowRuntimeExceptionWhenEventProcessingFails() throws Exception {
+    // Arrange
+    String workflowId = "test-workflow";
+    String token = "test-token";
+    ExecutionParameters parameters = new ExecutionParameters(new HashMap<>(), token);
+
+    when(repositoryService.createProcessDefinitionQuery()).thenReturn(processDefinitionQuery);
+    when(processDefinitionQuery.active()).thenReturn(processDefinitionQuery);
+    when(processDefinitionQuery.list()).thenReturn(List.of(processDefinition));
+    when(processDefinition.getName()).thenReturn(workflowId);
+    when(processDefinition.getDeploymentId()).thenReturn("deployment-id");
+    when(repositoryService.getDeploymentResources("deployment-id")).thenReturn(List.of(resource));
+    when(resource.getName()).thenReturn(CamundaBpmnBuilder.DEPLOYMENT_RESOURCE_TOKEN_KEY);
+    when(resource.getBytes()).thenReturn(token.getBytes(StandardCharsets.UTF_8));
+
+    doThrow(new IllegalArgumentException("Processing error")).when(requestReceivedEventProcessor).process(any());
+
+    // Act & Assert
+    org.junit.jupiter.api.Assertions.assertThrows(
+        RuntimeException.class,
+        () -> camundaEngine.execute(workflowId, parameters)
+    );
+  }
+
+  @Test
+  void shouldExecuteSuccessfullyWhenNoTokenResourceExists() throws Exception {
+    // Arrange
+    String workflowId = "test-workflow";
+    ExecutionParameters parameters = new ExecutionParameters(Map.of("key", "value"), "any-token");
+
+    when(repositoryService.createProcessDefinitionQuery()).thenReturn(processDefinitionQuery);
+    when(processDefinitionQuery.active()).thenReturn(processDefinitionQuery);
+    when(processDefinitionQuery.list()).thenReturn(List.of(processDefinition));
+    when(processDefinition.getName()).thenReturn(workflowId);
+    when(processDefinition.getDeploymentId()).thenReturn("deployment-id");
+    when(repositoryService.getDeploymentResources("deployment-id")).thenReturn(List.of());
+
+    ArgumentCaptor<RealTimeEvent<RequestReceivedEvent>> eventCaptor = ArgumentCaptor.forClass(RealTimeEvent.class);
+
+    // Act
+    camundaEngine.execute(workflowId, parameters);
+
+    // Assert
+    verify(requestReceivedEventProcessor).process(eventCaptor.capture());
+    RealTimeEvent<RequestReceivedEvent> capturedEvent = eventCaptor.getValue();
+    assertThat(capturedEvent.getSource().getWorkflowId()).isEqualTo(workflowId);
+  }
+
+  @Test
+  void shouldExecuteSuccessfullyWhenTokenResourceHasDifferentName() throws Exception {
+    // Arrange
+    String workflowId = "test-workflow";
+    ExecutionParameters parameters = new ExecutionParameters(Map.of("key", "value"), "any-token");
+
+    when(repositoryService.createProcessDefinitionQuery()).thenReturn(processDefinitionQuery);
+    when(processDefinitionQuery.active()).thenReturn(processDefinitionQuery);
+    when(processDefinitionQuery.list()).thenReturn(List.of(processDefinition));
+    when(processDefinition.getName()).thenReturn(workflowId);
+    when(processDefinition.getDeploymentId()).thenReturn("deployment-id");
+    when(repositoryService.getDeploymentResources("deployment-id")).thenReturn(List.of(resource));
+    when(resource.getName()).thenReturn("some-other-resource.xml");
+
+    ArgumentCaptor<RealTimeEvent<RequestReceivedEvent>> eventCaptor = ArgumentCaptor.forClass(RealTimeEvent.class);
+
+    // Act
+    camundaEngine.execute(workflowId, parameters);
+
+    // Assert
+    verify(requestReceivedEventProcessor).process(eventCaptor.capture());
+    RealTimeEvent<RequestReceivedEvent> capturedEvent = eventCaptor.getValue();
+    assertThat(capturedEvent.getSource().getWorkflowId()).isEqualTo(workflowId);
+  }
 }
