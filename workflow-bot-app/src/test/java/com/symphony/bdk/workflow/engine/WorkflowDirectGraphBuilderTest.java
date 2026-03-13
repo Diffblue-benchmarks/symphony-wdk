@@ -242,6 +242,232 @@ class WorkflowDirectGraphBuilderTest {
   }
 
   @Test
+  void shouldThrowNoStartingEventExceptionWhenFirstActivityHasNoEvents() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String activityId = "first-activity";
+
+    // Create activity with no events
+    com.symphony.bdk.workflow.swadl.v1.Activity activity = new com.symphony.bdk.workflow.swadl.v1.Activity();
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity baseActivity = new com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity() {};
+    baseActivity.setId(activityId);
+
+    // Use reflection to set private implementation field
+    java.lang.reflect.Field implField = com.symphony.bdk.workflow.swadl.v1.Activity.class.getDeclaredField("implementation");
+    implField.setAccessible(true);
+    implField.set(activity, baseActivity);
+
+    List<com.symphony.bdk.workflow.swadl.v1.Activity> activities = Collections.singletonList(activity);
+
+    // Register activity node
+    directGraph.registerToDictionary(activityId, new WorkflowNode().id(activityId).eventId(activityId));
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeStandaloneActivities",
+        List.class,
+        WorkflowDirectedGraph.class,
+        int.class
+    );
+    method.setAccessible(true);
+
+    // Act & Assert
+    try {
+      method.invoke(builder, activities, directGraph, 0);
+      assertThat(false).as("Expected NoStartingEventException to be thrown").isTrue();
+    } catch (Exception e) {
+      assertThat(e.getCause()).isInstanceOf(com.symphony.bdk.workflow.swadl.exception.NoStartingEventException.class);
+    }
+  }
+
+  @Test
+  void shouldLinkActivityToPreviousActivityWhenActivityHasNoEvents() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String firstActivityId = "first-activity";
+    String secondActivityId = "second-activity";
+
+    // Create first activity with events
+    com.symphony.bdk.workflow.swadl.v1.Activity firstActivity = new com.symphony.bdk.workflow.swadl.v1.Activity();
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity firstBaseActivity = new com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity() {};
+    firstBaseActivity.setId(firstActivityId);
+    firstBaseActivity.setOn(new EventWithTimeout());
+
+    // Use reflection to set private implementation field
+    java.lang.reflect.Field implField = com.symphony.bdk.workflow.swadl.v1.Activity.class.getDeclaredField("implementation");
+    implField.setAccessible(true);
+    implField.set(firstActivity, firstBaseActivity);
+
+    // Create second activity with no events
+    com.symphony.bdk.workflow.swadl.v1.Activity secondActivity = new com.symphony.bdk.workflow.swadl.v1.Activity();
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity secondBaseActivity = new com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity() {};
+    secondBaseActivity.setId(secondActivityId);
+    implField.set(secondActivity, secondBaseActivity);
+
+    List<com.symphony.bdk.workflow.swadl.v1.Activity> activities = List.of(firstActivity, secondActivity);
+
+    // Register activity nodes
+    directGraph.registerToDictionary(firstActivityId, new WorkflowNode().id(firstActivityId).eventId(firstActivityId));
+    directGraph.registerToDictionary(secondActivityId, new WorkflowNode().id(secondActivityId).eventId(secondActivityId));
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeStandaloneActivities",
+        List.class,
+        WorkflowDirectedGraph.class,
+        int.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, activities, directGraph, 1);
+
+    // Assert
+    assertThat(directGraph.getChildren(firstActivityId).getChildren()).contains(secondActivityId);
+    assertThat(directGraph.getParents(secondActivityId)).contains(firstActivityId);
+  }
+
+  @Test
+  void shouldAddIfConditionWhenActivityHasNoEventsAndIfCondition() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String firstActivityId = "first-activity";
+    String secondActivityId = "second-activity";
+    String ifCondition = "outputs.var1 == true";
+
+    // Create first activity with events
+    com.symphony.bdk.workflow.swadl.v1.Activity firstActivity = new com.symphony.bdk.workflow.swadl.v1.Activity();
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity firstBaseActivity = new com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity() {};
+    firstBaseActivity.setId(firstActivityId);
+    firstBaseActivity.setOn(new EventWithTimeout());
+
+    // Use reflection to set private implementation field
+    java.lang.reflect.Field implField = com.symphony.bdk.workflow.swadl.v1.Activity.class.getDeclaredField("implementation");
+    implField.setAccessible(true);
+    implField.set(firstActivity, firstBaseActivity);
+
+    // Create second activity with no events and an if condition
+    com.symphony.bdk.workflow.swadl.v1.Activity secondActivity = new com.symphony.bdk.workflow.swadl.v1.Activity();
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity secondBaseActivity = new com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity() {};
+    secondBaseActivity.setId(secondActivityId);
+    secondBaseActivity.setIfCondition(ifCondition);
+    implField.set(secondActivity, secondBaseActivity);
+
+    List<com.symphony.bdk.workflow.swadl.v1.Activity> activities = List.of(firstActivity, secondActivity);
+
+    // Register activity nodes
+    directGraph.registerToDictionary(firstActivityId, new WorkflowNode().id(firstActivityId).eventId(firstActivityId));
+    directGraph.registerToDictionary(secondActivityId, new WorkflowNode().id(secondActivityId).eventId(secondActivityId));
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeStandaloneActivities",
+        List.class,
+        WorkflowDirectedGraph.class,
+        int.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, activities, directGraph, 1);
+
+    // Assert
+    assertThat(directGraph.getChildren(firstActivityId).getChildren()).contains(secondActivityId);
+    assertThat(directGraph.getParents(secondActivityId)).contains(firstActivityId);
+    WorkflowNode secondNode = directGraph.readWorkflowNode(secondActivityId);
+    assertThat(secondNode.getIfConditions()).containsEntry(firstActivityId, ifCondition);
+  }
+
+  @Test
+  void shouldThrowInvalidActivityExceptionWhenActivityHasNoEventsAndElseCondition() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String firstActivityId = "first-activity";
+    String secondActivityId = "second-activity";
+
+    // Create first activity with events
+    com.symphony.bdk.workflow.swadl.v1.Activity firstActivity = new com.symphony.bdk.workflow.swadl.v1.Activity();
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity firstBaseActivity = new com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity() {};
+    firstBaseActivity.setId(firstActivityId);
+    firstBaseActivity.setOn(new EventWithTimeout());
+
+    // Use reflection to set private implementation field
+    java.lang.reflect.Field implField = com.symphony.bdk.workflow.swadl.v1.Activity.class.getDeclaredField("implementation");
+    implField.setAccessible(true);
+    implField.set(firstActivity, firstBaseActivity);
+
+    // Create second activity with no events and an else condition
+    com.symphony.bdk.workflow.swadl.v1.Activity secondActivity = new com.symphony.bdk.workflow.swadl.v1.Activity();
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity secondBaseActivity = new com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity() {};
+    secondBaseActivity.setId(secondActivityId);
+    secondBaseActivity.setElseCondition(new Object());
+    implField.set(secondActivity, secondBaseActivity);
+
+    List<com.symphony.bdk.workflow.swadl.v1.Activity> activities = List.of(firstActivity, secondActivity);
+
+    // Register activity nodes
+    directGraph.registerToDictionary(firstActivityId, new WorkflowNode().id(firstActivityId).eventId(firstActivityId));
+    directGraph.registerToDictionary(secondActivityId, new WorkflowNode().id(secondActivityId).eventId(secondActivityId));
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeStandaloneActivities",
+        List.class,
+        WorkflowDirectedGraph.class,
+        int.class
+    );
+    method.setAccessible(true);
+
+    // Act & Assert
+    try {
+      method.invoke(builder, activities, directGraph, 1);
+      assertThat(false).as("Expected InvalidActivityException to be thrown").isTrue();
+    } catch (Exception e) {
+      assertThat(e.getCause()).isInstanceOf(com.symphony.bdk.workflow.swadl.exception.InvalidActivityException.class);
+    }
+  }
+
+  @Test
   void shouldHandleExpiredActivityWhenParentIsExclusiveFormReply() throws Exception {
     // Arrange
     WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
