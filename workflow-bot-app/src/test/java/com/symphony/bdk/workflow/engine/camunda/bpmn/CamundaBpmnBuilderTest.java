@@ -3,14 +3,21 @@ package com.symphony.bdk.workflow.engine.camunda.bpmn;
 import com.symphony.bdk.core.service.session.SessionService;
 import com.symphony.bdk.workflow.engine.camunda.WorkflowDirectedGraphService;
 import com.symphony.bdk.workflow.engine.camunda.bpmn.builder.WorkflowNodeBpmnBuilderRegistry;
+import com.symphony.bdk.workflow.swadl.v1.Activity;
+import com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity;
 
 import org.camunda.bpm.engine.RepositoryService;
+import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.builder.AbstractFlowNodeBuilder;
 import org.camunda.bpm.model.bpmn.builder.EndEventBuilder;
 import org.camunda.bpm.model.bpmn.builder.EventBasedGatewayBuilder;
 import org.camunda.bpm.model.bpmn.builder.EventSubProcessBuilder;
 import org.camunda.bpm.model.bpmn.builder.ExclusiveGatewayBuilder;
 import org.camunda.bpm.model.bpmn.builder.SubProcessBuilder;
+import org.camunda.bpm.model.bpmn.instance.camunda.CamundaEntry;
+import org.camunda.bpm.model.bpmn.instance.camunda.CamundaInputOutput;
+import org.camunda.bpm.model.bpmn.instance.camunda.CamundaInputParameter;
+import org.camunda.bpm.model.bpmn.instance.camunda.CamundaMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,12 +25,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -294,5 +307,138 @@ class CamundaBpmnBuilderTest {
         BuildProcessContext.class, AbstractFlowNodeBuilder.class);
     closeUpSubProcessesIfAnyMethod.setAccessible(true);
     return (AbstractFlowNodeBuilder<?, ?>) closeUpSubProcessesIfAnyMethod.invoke(camundaBpmnBuilder, context, builder);
+  }
+
+  @Test
+  void shouldHandleEmptyActivitiesListWhenInjectingActivityDefAsInput() throws Exception {
+    // Given
+    BpmnModelInstance instance = mock(BpmnModelInstance.class);
+    List<Activity> activities = new ArrayList<>();
+    Collection<CamundaInputOutput> emptyCollection = new ArrayList<>();
+    when(instance.getModelElementsByType(CamundaInputOutput.class)).thenReturn(emptyCollection);
+
+    // When
+    invokeInjectActivityDefAsInput(instance, activities);
+
+    // Then
+    verify(instance).getModelElementsByType(CamundaInputOutput.class);
+  }
+
+  @Test
+  void shouldInjectActivityDefAsInputForSingleActivity() throws Exception {
+    // Given
+    BpmnModelInstance instance = mock(BpmnModelInstance.class);
+
+    BaseActivity baseActivity = mock(BaseActivity.class);
+    when(baseActivity.getId()).thenReturn("testActivity1");
+
+    Activity activity = new Activity();
+    activity.setImplementation(baseActivity);
+
+    List<Activity> activities = Arrays.asList(activity);
+
+    CamundaInputOutput inputOutput = mock(CamundaInputOutput.class);
+    CamundaInputParameter activityNameParam = mock(CamundaInputParameter.class);
+    when(activityNameParam.getCamundaName()).thenReturn("activity");
+    when(activityNameParam.getTextContent()).thenReturn("testActivity1");
+
+    Collection<CamundaInputParameter> inputParams = Arrays.asList(activityNameParam);
+    when(inputOutput.getChildElementsByType(CamundaInputParameter.class)).thenReturn(inputParams);
+
+    Collection<CamundaInputOutput> inputOutputCollection = Arrays.asList(inputOutput);
+    when(instance.getModelElementsByType(CamundaInputOutput.class)).thenReturn(inputOutputCollection);
+
+    setupBpmnModelInstanceMocks(instance, inputOutput);
+
+    // When
+    invokeInjectActivityDefAsInput(instance, activities);
+
+    // Then
+    verify(instance).getModelElementsByType(CamundaInputOutput.class);
+    verify(inputOutput).getChildElementsByType(CamundaInputParameter.class);
+    verify(activityNameParam).getCamundaName();
+  }
+
+  @Test
+  void shouldInjectActivityDefAsInputForMultipleActivities() throws Exception {
+    // Given
+    BpmnModelInstance instance = mock(BpmnModelInstance.class);
+
+    BaseActivity baseActivity1 = mock(BaseActivity.class);
+    when(baseActivity1.getId()).thenReturn("activity1");
+    Activity activity1 = new Activity();
+    activity1.setImplementation(baseActivity1);
+
+    BaseActivity baseActivity2 = mock(BaseActivity.class);
+    when(baseActivity2.getId()).thenReturn("activity2");
+    Activity activity2 = new Activity();
+    activity2.setImplementation(baseActivity2);
+
+    List<Activity> activities = Arrays.asList(activity1, activity2);
+
+    CamundaInputOutput inputOutput1 = mock(CamundaInputOutput.class);
+    CamundaInputParameter activityNameParam1 = mock(CamundaInputParameter.class);
+    when(activityNameParam1.getCamundaName()).thenReturn("activity");
+    when(activityNameParam1.getTextContent()).thenReturn("activity1");
+    Collection<CamundaInputParameter> inputParams1 = Arrays.asList(activityNameParam1);
+    when(inputOutput1.getChildElementsByType(CamundaInputParameter.class)).thenReturn(inputParams1);
+
+    CamundaInputOutput inputOutput2 = mock(CamundaInputOutput.class);
+    CamundaInputParameter activityNameParam2 = mock(CamundaInputParameter.class);
+    when(activityNameParam2.getCamundaName()).thenReturn("activity");
+    when(activityNameParam2.getTextContent()).thenReturn("activity2");
+    Collection<CamundaInputParameter> inputParams2 = Arrays.asList(activityNameParam2);
+    when(inputOutput2.getChildElementsByType(CamundaInputParameter.class)).thenReturn(inputParams2);
+
+    Collection<CamundaInputOutput> inputOutputCollection = Arrays.asList(inputOutput1, inputOutput2);
+    when(instance.getModelElementsByType(CamundaInputOutput.class)).thenReturn(inputOutputCollection);
+
+    setupBpmnModelInstanceMocksForMultiple(instance, inputOutput1, inputOutput2);
+
+    // When
+    invokeInjectActivityDefAsInput(instance, activities);
+
+    // Then
+    verify(instance).getModelElementsByType(CamundaInputOutput.class);
+    verify(inputOutput1).getChildElementsByType(CamundaInputParameter.class);
+    verify(inputOutput2).getChildElementsByType(CamundaInputParameter.class);
+    verify(activityNameParam1).getCamundaName();
+    verify(activityNameParam2).getCamundaName();
+  }
+
+  private void setupBpmnModelInstanceMocks(BpmnModelInstance instance, CamundaInputOutput inputOutput) {
+    org.camunda.bpm.model.bpmn.instance.camunda.CamundaMap map =
+        mock(org.camunda.bpm.model.bpmn.instance.camunda.CamundaMap.class);
+    org.camunda.bpm.model.bpmn.instance.camunda.CamundaEntry entry =
+        mock(org.camunda.bpm.model.bpmn.instance.camunda.CamundaEntry.class);
+    CamundaInputParameter inputParameter = mock(CamundaInputParameter.class);
+    Collection<org.camunda.bpm.model.bpmn.instance.camunda.CamundaEntry> entries = new ArrayList<>();
+
+    when(instance.newInstance(org.camunda.bpm.model.bpmn.instance.camunda.CamundaMap.class)).thenReturn(map);
+    when(instance.newInstance(org.camunda.bpm.model.bpmn.instance.camunda.CamundaEntry.class)).thenReturn(entry);
+    when(instance.newInstance(CamundaInputParameter.class)).thenReturn(inputParameter);
+    when(map.getCamundaEntries()).thenReturn(entries);
+  }
+
+  private void setupBpmnModelInstanceMocksForMultiple(BpmnModelInstance instance, CamundaInputOutput... inputOutputs) {
+    when(instance.newInstance(org.camunda.bpm.model.bpmn.instance.camunda.CamundaMap.class)).thenAnswer(
+        invocation -> {
+          org.camunda.bpm.model.bpmn.instance.camunda.CamundaMap map =
+              mock(org.camunda.bpm.model.bpmn.instance.camunda.CamundaMap.class);
+          when(map.getCamundaEntries()).thenReturn(new ArrayList<>());
+          return map;
+        });
+    when(instance.newInstance(org.camunda.bpm.model.bpmn.instance.camunda.CamundaEntry.class)).thenAnswer(
+        invocation -> mock(org.camunda.bpm.model.bpmn.instance.camunda.CamundaEntry.class));
+    when(instance.newInstance(CamundaInputParameter.class)).thenAnswer(
+        invocation -> mock(CamundaInputParameter.class));
+  }
+
+  private void invokeInjectActivityDefAsInput(BpmnModelInstance instance, List<Activity> activities)
+      throws Exception {
+    Method injectActivityDefAsInputMethod = CamundaBpmnBuilder.class.getDeclaredMethod("injectActivityDefAsInput",
+        BpmnModelInstance.class, List.class);
+    injectActivityDefAsInputMethod.setAccessible(true);
+    injectActivityDefAsInputMethod.invoke(camundaBpmnBuilder, instance, activities);
   }
 }
