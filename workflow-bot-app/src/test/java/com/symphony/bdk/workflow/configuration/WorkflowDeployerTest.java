@@ -16,9 +16,11 @@ import com.symphony.bdk.workflow.engine.camunda.WorkflowDirectedGraphService;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -118,5 +120,136 @@ class WorkflowDeployerTest {
     // No interactions with workflowEngine expected
     verify(workflowEngine, never()).deploy(any(CamundaTranslatedWorkflowContext.class));
     verify(workflowEngine, never()).undeployByWorkflowId(any());
+  }
+
+  @Test
+  void shouldReturnEarlyWhenWorkflowFileIsEmpty(@TempDir Path tempDir) throws IOException, ProcessingException {
+    Path emptyFile = tempDir.resolve("empty-workflow.yaml");
+    Files.createFile(emptyFile);
+
+    deployer.addWorkflow(emptyFile);
+
+    verify(workflowEngine, never()).translate(any());
+    verify(workflowEngine, never()).deploy(any(CamundaTranslatedWorkflowContext.class));
+  }
+
+  @Test
+  void shouldDeployWorkflowWhenWorkflowIsToPublish(@TempDir Path tempDir) throws Exception {
+    Path workflowFile = tempDir.resolve("publish-workflow.yaml");
+    String workflowContent = "id: test-workflow\n"
+        + "activities:\n"
+        + "  - execute-script:\n"
+        + "      id: scriptActivity\n"
+        + "      on:\n"
+        + "        message-received:\n"
+        + "          content: /test\n"
+        + "      script: |\n";
+    Files.writeString(workflowFile, workflowContent);
+
+    CamundaTranslatedWorkflowContext context = mock(CamundaTranslatedWorkflowContext.class);
+    when(workflowEngine.translate(any())).thenReturn(context);
+
+    deployer.addWorkflow(workflowFile);
+
+    verify(workflowEngine).translate(any());
+    verify(workflowEngine).deploy(context);
+    verify(workflowDirectedGraphService).putDirectedGraph(any());
+  }
+
+  @Test
+  void shouldUndeployOldVersionWhenDraftWorkflowWasPreviouslyPublished(@TempDir Path tempDir) throws Exception {
+    Path workflowFile = tempDir.resolve("draft-workflow.yaml");
+    String workflowContent = "id: test-workflow\n"
+        + "properties:\n"
+        + "  publish: false\n"
+        + "activities:\n"
+        + "  - execute-script:\n"
+        + "      id: scriptActivity\n"
+        + "      on:\n"
+        + "        message-received:\n"
+        + "          content: /test\n"
+        + "      script: |\n";
+    Files.writeString(workflowFile, workflowContent);
+
+    // Set up deployedWorkflows map to have a previously published workflow
+    Field deployedWorkflowsField = WorkflowDeployer.class.getDeclaredField("deployedWorkflows");
+    deployedWorkflowsField.setAccessible(true);
+    Map<Path, Pair<String, Boolean>> deployedWorkflows =
+        (Map<Path, Pair<String, Boolean>>) deployedWorkflowsField.get(deployer);
+    deployedWorkflows.put(workflowFile, Pair.of("test-workflow", true));
+
+    CamundaTranslatedWorkflowContext context = mock(CamundaTranslatedWorkflowContext.class);
+    when(workflowEngine.translate(any())).thenReturn(context);
+
+    deployer.addWorkflow(workflowFile);
+
+    verify(workflowEngine).translate(any());
+    verify(workflowEngine).undeployByWorkflowId(eq("test-workflow"));
+    verify(workflowEngine, never()).deploy(any(CamundaTranslatedWorkflowContext.class));
+    assertThat(deployedWorkflows).containsEntry(workflowFile, Pair.of("test-workflow", false));
+  }
+
+  @Test
+  void shouldStoreDraftWorkflowWithoutDeployingWhenNotPreviouslyPublished(@TempDir Path tempDir) throws Exception {
+    Path workflowFile = tempDir.resolve("new-draft-workflow.yaml");
+    String workflowContent = "id: new-draft-workflow\n"
+        + "properties:\n"
+        + "  publish: false\n"
+        + "activities:\n"
+        + "  - execute-script:\n"
+        + "      id: scriptActivity\n"
+        + "      on:\n"
+        + "        message-received:\n"
+        + "          content: /test\n"
+        + "      script: |\n";
+    Files.writeString(workflowFile, workflowContent);
+
+    CamundaTranslatedWorkflowContext context = mock(CamundaTranslatedWorkflowContext.class);
+    when(workflowEngine.translate(any())).thenReturn(context);
+
+    deployer.addWorkflow(workflowFile);
+
+    verify(workflowEngine).translate(any());
+    verify(workflowEngine, never()).deploy(any(CamundaTranslatedWorkflowContext.class));
+    verify(workflowEngine, never()).undeployByWorkflowId(any());
+
+    Field deployedWorkflowsField = WorkflowDeployer.class.getDeclaredField("deployedWorkflows");
+    deployedWorkflowsField.setAccessible(true);
+    Map<Path, Pair<String, Boolean>> deployedWorkflows =
+        (Map<Path, Pair<String, Boolean>>) deployedWorkflowsField.get(deployer);
+    assertThat(deployedWorkflows).containsEntry(workflowFile, Pair.of("new-draft-workflow", false));
+  }
+
+  @Test
+  void shouldNotUndeployWhenDraftWorkflowWasPreviouslyDraft(@TempDir Path tempDir) throws Exception {
+    Path workflowFile = tempDir.resolve("draft-workflow.yaml");
+    String workflowContent = "id: test-workflow\n"
+        + "properties:\n"
+        + "  publish: false\n"
+        + "activities:\n"
+        + "  - execute-script:\n"
+        + "      id: scriptActivity\n"
+        + "      on:\n"
+        + "        message-received:\n"
+        + "          content: /test\n"
+        + "      script: |\n";
+    Files.writeString(workflowFile, workflowContent);
+
+    // Set up deployedWorkflows map to have a previously draft workflow
+    Field deployedWorkflowsField = WorkflowDeployer.class.getDeclaredField("deployedWorkflows");
+    deployedWorkflowsField.setAccessible(true);
+    Map<Path, Pair<String, Boolean>> deployedWorkflows =
+        (Map<Path, Pair<String, Boolean>>) deployedWorkflowsField.get(deployer);
+    deployedWorkflows.put(workflowFile, Pair.of("test-workflow", false));
+
+    CamundaTranslatedWorkflowContext context = mock(CamundaTranslatedWorkflowContext.class);
+    when(workflowEngine.translate(any())).thenReturn(context);
+
+    deployer.addWorkflow(workflowFile);
+
+    verify(workflowEngine).translate(any());
+    verify(workflowEngine, never()).deploy(any(CamundaTranslatedWorkflowContext.class));
+    verify(workflowEngine, never()).undeployByWorkflowId(any());
+    assertThat(deployedWorkflows).containsEntry(workflowFile, Pair.of("test-workflow", false));
   }
 }
