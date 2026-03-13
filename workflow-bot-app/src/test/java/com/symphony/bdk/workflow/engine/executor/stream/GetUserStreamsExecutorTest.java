@@ -4,6 +4,7 @@ import com.symphony.bdk.core.OboServices;
 import com.symphony.bdk.core.auth.AuthSession;
 import com.symphony.bdk.core.service.pagination.model.PaginationAttribute;
 import com.symphony.bdk.core.service.stream.OboStreamService;
+import com.symphony.bdk.core.service.stream.StreamService;
 import com.symphony.bdk.gen.api.model.StreamAttributes;
 import com.symphony.bdk.gen.api.model.StreamFilter;
 import com.symphony.bdk.workflow.engine.executor.ActivityExecutorContext;
@@ -42,6 +43,9 @@ class GetUserStreamsExecutorTest {
 
     @Mock
     private OboStreamService oboStreamService;
+
+    @Mock
+    private StreamService streamService;
 
     @Mock
     private AuthSession authSession;
@@ -178,6 +182,98 @@ class GetUserStreamsExecutorTest {
 
         // Assert
         verify(oboStreamService).listStreams(any(StreamFilter.class));
+        verify(context).setOutputVariable(eq("streams"), eq(expectedStreams));
+    }
+
+    @Test
+    void executeWithoutOboAndNoPaginationShouldCallStreamServiceWithoutPagination() {
+        // Arrange
+        GetUserStreams activity = new GetUserStreams();
+        activity.setIncludeInactiveStreams(true);
+        // No OBO, no limit, no skip
+
+        StreamAttributes stream1 = new StreamAttributes();
+        StreamAttributes stream2 = new StreamAttributes();
+        List<StreamAttributes> expectedStreams = Arrays.asList(stream1, stream2);
+
+        when(context.getActivity()).thenReturn(activity);
+        when(context.bdk()).thenReturn(bdkGateway);
+        when(bdkGateway.streams()).thenReturn(streamService);
+        when(streamService.listStreams(any(StreamFilter.class))).thenReturn(expectedStreams);
+
+        // Act
+        executor.execute(context);
+
+        // Assert
+        ArgumentCaptor<StreamFilter> filterCaptor = ArgumentCaptor.forClass(StreamFilter.class);
+        verify(streamService).listStreams(filterCaptor.capture());
+
+        StreamFilter capturedFilter = filterCaptor.getValue();
+        assertNotNull(capturedFilter);
+        assertEquals(true, capturedFilter.getIncludeInactiveStreams());
+
+        verify(context).setOutputVariable(eq("streams"), eq(expectedStreams));
+    }
+
+    @Test
+    void executeWithoutOboAndOnlyLimitSetShouldCallStreamServiceWithoutPagination() {
+        // Arrange
+        GetUserStreams activity = new GetUserStreams();
+        activity.setLimit(10);
+        activity.setIncludeInactiveStreams(false);
+        // No OBO, skip is null
+
+        StreamAttributes stream1 = new StreamAttributes();
+        List<StreamAttributes> expectedStreams = Arrays.asList(stream1);
+
+        when(context.getActivity()).thenReturn(activity);
+        when(context.bdk()).thenReturn(bdkGateway);
+        when(bdkGateway.streams()).thenReturn(streamService);
+        when(streamService.listStreams(any(StreamFilter.class))).thenReturn(expectedStreams);
+
+        // Act
+        executor.execute(context);
+
+        // Assert
+        ArgumentCaptor<StreamFilter> filterCaptor = ArgumentCaptor.forClass(StreamFilter.class);
+        verify(streamService).listStreams(filterCaptor.capture());
+
+        StreamFilter capturedFilter = filterCaptor.getValue();
+        assertNotNull(capturedFilter);
+        assertEquals(false, capturedFilter.getIncludeInactiveStreams());
+
+        verify(context).setOutputVariable(eq("streams"), eq(expectedStreams));
+    }
+
+    @Test
+    void executeWithoutOboAndOnlySkipSetShouldCallStreamServiceWithoutPagination() {
+        // Arrange
+        GetUserStreams activity = new GetUserStreams();
+        activity.setSkip(5);
+        activity.setIncludeInactiveStreams(true);
+        // No OBO, limit is null
+
+        StreamAttributes stream1 = new StreamAttributes();
+        StreamAttributes stream2 = new StreamAttributes();
+        StreamAttributes stream3 = new StreamAttributes();
+        List<StreamAttributes> expectedStreams = Arrays.asList(stream1, stream2, stream3);
+
+        when(context.getActivity()).thenReturn(activity);
+        when(context.bdk()).thenReturn(bdkGateway);
+        when(bdkGateway.streams()).thenReturn(streamService);
+        when(streamService.listStreams(any(StreamFilter.class))).thenReturn(expectedStreams);
+
+        // Act
+        executor.execute(context);
+
+        // Assert
+        ArgumentCaptor<StreamFilter> filterCaptor = ArgumentCaptor.forClass(StreamFilter.class);
+        verify(streamService).listStreams(filterCaptor.capture());
+
+        StreamFilter capturedFilter = filterCaptor.getValue();
+        assertNotNull(capturedFilter);
+        assertEquals(true, capturedFilter.getIncludeInactiveStreams());
+
         verify(context).setOutputVariable(eq("streams"), eq(expectedStreams));
     }
 }
