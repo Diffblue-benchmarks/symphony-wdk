@@ -8,6 +8,8 @@ import com.symphony.bdk.workflow.engine.handler.audit.AuditTrailLogAction;
 import com.symphony.bdk.workflow.event.RealTimeEventProcessor;
 import com.symphony.bdk.workflow.swadl.v1.event.RequestReceivedEvent;
 import org.camunda.bpm.engine.RepositoryService;
+import org.camunda.bpm.engine.repository.Deployment;
+import org.camunda.bpm.engine.repository.DeploymentQuery;
 import org.camunda.bpm.engine.repository.ProcessDefinition;
 import org.camunda.bpm.engine.repository.ProcessDefinitionQuery;
 import org.camunda.bpm.engine.repository.Resource;
@@ -73,6 +75,15 @@ class CamundaEngineTest {
 
   @Mock
   private Resource resource;
+
+  @Mock
+  private DeploymentQuery deploymentQuery;
+
+  @Mock
+  private Deployment deployment1;
+
+  @Mock
+  private Deployment deployment2;
 
   private CamundaEngine camundaEngine;
 
@@ -231,5 +242,31 @@ class CamundaEngineTest {
 
     // Assert
     verify(requestReceivedEventProcessor).process(event);
+  }
+
+  @Test
+  void shouldUndeployAllDeploymentsWhenUndeployAllCalled() {
+    // Arrange
+    String deploymentId1 = "deployment-1";
+    String deploymentId2 = "deployment-2";
+    String deploymentName1 = "workflow-1";
+    String deploymentName2 = "workflow-2";
+
+    when(deployment1.getId()).thenReturn(deploymentId1);
+    when(deployment1.getName()).thenReturn(deploymentName1);
+    when(deployment2.getId()).thenReturn(deploymentId2);
+    when(deployment2.getName()).thenReturn(deploymentName2);
+
+    when(repositoryService.createDeploymentQuery()).thenReturn(deploymentQuery);
+    when(deploymentQuery.list()).thenReturn(List.of(deployment1, deployment2));
+
+    // Act
+    camundaEngine.undeployAll();
+
+    // Assert
+    verify(repositoryService).deleteDeployment(deploymentId1, true);
+    verify(repositoryService).deleteDeployment(deploymentId2, true);
+    verify(auditTrailLogger).undeployed(deployment1);
+    verify(auditTrailLogger).undeployed(deployment2);
   }
 }
