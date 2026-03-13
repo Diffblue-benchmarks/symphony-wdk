@@ -431,4 +431,233 @@ class ProcessingMessageToSwadlErrorTest {
     assertThat(result.getMessage()).contains("Unknown property");
     assertThat(result.getMessage()).contains("testProperty");
   }
+
+  @Test
+  void toErrorMessage_shouldHandleAdditionalPropertiesError() {
+    // Arrange
+    JsonNode yamlTree = mapper.createObjectNode();
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/testProperty");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "additionalProperties");
+    ArrayNode unwantedArray = mapper.createArrayNode();
+    unwantedArray.add("unwantedField");
+    errorJson.set("unwanted", unwantedArray);
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Original message");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.of(60));
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getMessage()).isEqualTo("Unknown property 'unwantedField'");
+  }
+
+  @Test
+  void toErrorMessage_shouldHandleRequiredError() {
+    // Arrange
+    JsonNode yamlTree = mapper.createObjectNode();
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/myObject");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "required");
+    ArrayNode missingArray = mapper.createArrayNode();
+    missingArray.add("requiredField");
+    errorJson.set("missing", missingArray);
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Original message");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.of(65));
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getMessage()).isEqualTo("Missing property 'requiredField' for myObject object");
+  }
+
+  @Test
+  void toErrorMessage_shouldHandlePatternError() {
+    // Arrange
+    JsonNode yamlTree = mapper.createObjectNode();
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/myProperty/fieldName");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "pattern");
+    errorJson.put("regex", "^[a-zA-Z0-9]+$");
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Original message");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.of(70));
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getMessage()).isEqualTo("Invalid property 'fieldName', must match pattern ^[a-zA-Z0-9]+$");
+  }
+
+  @Test
+  void toErrorMessage_shouldHandleTypeErrorWithNonTextualNode() {
+    // Arrange
+    ObjectNode yamlTree = mapper.createObjectNode();
+    ObjectNode nestedObject = mapper.createObjectNode();
+    nestedObject.put("field", "value");
+    yamlTree.set("myProperty", nestedObject);
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/myProperty");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "type");
+    ArrayNode expectedArray = mapper.createArrayNode();
+    expectedArray.add("string");
+    errorJson.set("expected", expectedArray);
+    errorJson.put("found", "object");
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Original message");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.of(75));
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getMessage()).isEqualTo("Invalid property 'myProperty', expecting string type, got object");
+  }
+
+  @Test
+  void toErrorMessage_shouldHandleTypeErrorWithTextualNode() {
+    // Arrange
+    ObjectNode yamlTree = mapper.createObjectNode();
+    yamlTree.put("myProperty", "invalidValue");
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/myProperty");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "type");
+    ArrayNode expectedArray = mapper.createArrayNode();
+    expectedArray.add("object");
+    errorJson.set("expected", expectedArray);
+    errorJson.put("found", "string");
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Original message");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.of(80));
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getMessage()).isEqualTo("Invalid property 'invalidValue', expecting object type, got string");
+  }
+
+  @Test
+  void toErrorMessage_shouldHandleOneOfErrorWithObjectNode() {
+    // Arrange
+    ObjectNode yamlTree = mapper.createObjectNode();
+    ObjectNode myPropertyNode = mapper.createObjectNode();
+    myPropertyNode.put("unknownField", "value");
+    yamlTree.set("myProperty", myPropertyNode);
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/myProperty");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "oneOf");
+    // Add empty reports array to avoid NullPointerException in drillDownReports
+    ArrayNode reportsArray = mapper.createArrayNode();
+    errorJson.set("reports", reportsArray);
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Original message");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.of(85));
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getMessage()).isEqualTo("Unknown property 'unknownField' for myProperty object");
+  }
+
+  @Test
+  void toErrorMessage_shouldHandleOneOfErrorWithNonObjectNode() {
+    // Arrange
+    ObjectNode yamlTree = mapper.createObjectNode();
+    yamlTree.put("myProperty", "simpleValue");
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/myProperty");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "oneOf");
+    // Add empty reports array to avoid NullPointerException in drillDownReports
+    ArrayNode reportsArray = mapper.createArrayNode();
+    errorJson.set("reports", reportsArray);
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Original message");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.of(90));
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getMessage()).isEqualTo("Unknown property  for myProperty object");
+  }
+
+  @Test
+  void toErrorMessage_shouldReturnOriginalMessageForUnknownErrorType() {
+    // Arrange
+    JsonNode yamlTree = mapper.createObjectNode();
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/myProperty");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "unknownKeyword");
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Fallback error message");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.of(95));
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getMessage()).isEqualTo("Fallback error message");
+  }
 }
