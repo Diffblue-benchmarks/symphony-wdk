@@ -556,4 +556,26 @@ class CamundaEngineTest {
 
   static class TestBaseActivity extends BaseActivity {
   }
+
+  @Test
+  void shouldDeployWorkflowAndReturnDeploymentIdWhenDeployCalled() {
+    // Arrange
+    Workflow workflow = createWorkflowWithUniqueActivityIds("test-workflow", "activity1");
+    CamundaTranslatedWorkflowContext context = new CamundaTranslatedWorkflowContext(workflow, null, null);
+
+    String expectedDeploymentId = "deployment-123";
+    String expectedDeploymentName = "test-workflow";
+
+    when(deployment1.getId()).thenReturn(expectedDeploymentId);
+    when(deployment1.getName()).thenReturn(expectedDeploymentName);
+    when(bpmnBuilder.deployWorkflow(context)).thenReturn(deployment1);
+
+    // Act
+    String actualDeploymentId = camundaEngine.deploy(context);
+
+    // Assert
+    assertThat(actualDeploymentId).isEqualTo(expectedDeploymentId);
+    verify(bpmnBuilder).deployWorkflow(context);
+    verify(auditTrailLogger).deployed(deployment1);
+  }
 }
