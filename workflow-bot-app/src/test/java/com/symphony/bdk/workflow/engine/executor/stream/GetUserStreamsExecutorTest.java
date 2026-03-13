@@ -276,4 +276,43 @@ class GetUserStreamsExecutorTest {
 
         verify(context).setOutputVariable(eq("streams"), eq(expectedStreams));
     }
+
+    @Test
+    void executeWithoutOboAndWithPaginationShouldCallStreamServiceWithPagination() {
+        // Arrange
+        GetUserStreams activity = new GetUserStreams();
+        activity.setLimit(10);
+        activity.setSkip(5);
+        activity.setIncludeInactiveStreams(false);
+        // No OBO, both limit and skip are set
+
+        StreamAttributes stream1 = new StreamAttributes();
+        StreamAttributes stream2 = new StreamAttributes();
+        List<StreamAttributes> expectedStreams = Arrays.asList(stream1, stream2);
+
+        when(context.getActivity()).thenReturn(activity);
+        when(context.bdk()).thenReturn(bdkGateway);
+        when(bdkGateway.streams()).thenReturn(streamService);
+        when(streamService.listStreams(any(StreamFilter.class), any(PaginationAttribute.class)))
+            .thenReturn(expectedStreams);
+
+        // Act
+        executor.execute(context);
+
+        // Assert
+        ArgumentCaptor<StreamFilter> filterCaptor = ArgumentCaptor.forClass(StreamFilter.class);
+        ArgumentCaptor<PaginationAttribute> paginationCaptor = ArgumentCaptor.forClass(PaginationAttribute.class);
+        verify(streamService).listStreams(filterCaptor.capture(), paginationCaptor.capture());
+
+        StreamFilter capturedFilter = filterCaptor.getValue();
+        assertNotNull(capturedFilter);
+        assertEquals(false, capturedFilter.getIncludeInactiveStreams());
+
+        PaginationAttribute capturedPagination = paginationCaptor.getValue();
+        assertNotNull(capturedPagination);
+        assertEquals(5, capturedPagination.getSkip());
+        assertEquals(10, capturedPagination.getLimit());
+
+        verify(context).setOutputVariable(eq("streams"), eq(expectedStreams));
+    }
 }
