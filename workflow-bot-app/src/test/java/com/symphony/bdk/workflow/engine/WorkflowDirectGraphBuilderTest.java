@@ -4,9 +4,11 @@ import com.symphony.bdk.core.auth.AuthSession;
 import com.symphony.bdk.core.service.session.SessionService;
 import com.symphony.bdk.gen.api.model.UserV2;
 import com.symphony.bdk.workflow.engine.WorkflowDirectedGraph.Gateway;
+import com.symphony.bdk.workflow.swadl.v1.Event;
 import com.symphony.bdk.workflow.swadl.v1.EventWithTimeout;
 import com.symphony.bdk.workflow.swadl.v1.Workflow;
 import com.symphony.bdk.workflow.swadl.v1.event.ActivityExpiredEvent;
+import com.symphony.bdk.workflow.swadl.v1.event.FormRepliedEvent;
 
 import org.junit.jupiter.api.Test;
 
@@ -160,5 +162,243 @@ class WorkflowDirectGraphBuilderTest {
     EventWithTimeout event = (EventWithTimeout) registeredNode.getEvent();
     assertThat(event.getTimeout()).isEqualTo(timeoutValue);
     assertThat(event.getActivityExpired()).isNotNull();
+  }
+
+  @Test
+  void shouldHandleExpiredActivityWhenParentIsNotExclusiveFormReply() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String expiredActivityId = "expired-activity";
+    String parentActivityId = "parent-activity";
+    String grandParentId = "grand-parent";
+    String currentActivityId = "current-activity";
+
+    // Register expired activity node
+    directGraph.registerToDictionary(expiredActivityId,
+        new WorkflowNode().id(expiredActivityId).eventId(expiredActivityId));
+
+    // Register parent activity node with non-exclusive form reply event
+    FormRepliedEvent formRepliedEvent = new FormRepliedEvent();
+    formRepliedEvent.setExclusive(false);
+    EventWithTimeout parentEvent = new EventWithTimeout();
+    parentEvent.setFormReplied(formRepliedEvent);
+    parentEvent.setTimeout("PT5M");
+
+    WorkflowNode parentNode = new WorkflowNode()
+        .id(parentActivityId)
+        .eventId(parentActivityId)
+        .event(parentEvent)
+        .elementType(WorkflowNodeType.FORM_REPLIED_EVENT);
+    directGraph.registerToDictionary(parentActivityId, parentNode);
+
+    // Register grand parent node
+    directGraph.registerToDictionary(grandParentId,
+        new WorkflowNode().id(grandParentId).eventId(grandParentId));
+
+    // Register current activity node
+    directGraph.registerToDictionary(currentActivityId,
+        new WorkflowNode().id(currentActivityId).eventId(currentActivityId));
+
+    // Set up parent relationships
+    directGraph.addParent(expiredActivityId, parentActivityId);
+    directGraph.addParent(parentActivityId, grandParentId);
+
+    // Create event with activity expired
+    Event event = new Event();
+    ActivityExpiredEvent activityExpiredEvent = new ActivityExpiredEvent();
+    activityExpiredEvent.setActivityId(expiredActivityId);
+    event.setActivityExpired(activityExpiredEvent);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeExpiredActivity",
+        Event.class,
+        String.class,
+        WorkflowDirectedGraph.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    String result = (String) method.invoke(builder, event, currentActivityId, directGraph);
+
+    // Assert
+    assertThat(result).isEqualTo(parentActivityId);
+    WorkflowNode currentNode = directGraph.readWorkflowNode(currentActivityId);
+    assertThat(currentNode.getElementType()).isEqualTo(WorkflowNodeType.ACTIVITY_EXPIRED_EVENT);
+    assertThat(currentNode.getWrappedType()).isEqualTo(ActivityExpiredEvent.class);
+  }
+
+  @Test
+  void shouldHandleExpiredActivityWhenParentIsExclusiveFormReply() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String expiredActivityId = "expired-activity";
+    String parentActivityId = "parent-activity";
+    String grandParentId = "grand-parent";
+    String currentActivityId = "current-activity";
+
+    // Register expired activity node
+    directGraph.registerToDictionary(expiredActivityId,
+        new WorkflowNode().id(expiredActivityId).eventId(expiredActivityId));
+
+    // Register parent activity node with exclusive form reply event
+    FormRepliedEvent formRepliedEvent = new FormRepliedEvent();
+    formRepliedEvent.setExclusive(true);
+    EventWithTimeout parentEvent = new EventWithTimeout();
+    parentEvent.setFormReplied(formRepliedEvent);
+    parentEvent.setTimeout("PT10M");
+
+    WorkflowNode parentNode = new WorkflowNode()
+        .id(parentActivityId)
+        .eventId(parentActivityId)
+        .event(parentEvent)
+        .elementType(WorkflowNodeType.FORM_REPLIED_EVENT);
+    directGraph.registerToDictionary(parentActivityId, parentNode);
+
+    // Register grand parent node
+    directGraph.registerToDictionary(grandParentId,
+        new WorkflowNode().id(grandParentId).eventId(grandParentId));
+
+    // Register current activity node
+    directGraph.registerToDictionary(currentActivityId,
+        new WorkflowNode().id(currentActivityId).eventId(currentActivityId));
+
+    // Set up parent relationships
+    directGraph.addParent(expiredActivityId, parentActivityId);
+    directGraph.addParent(parentActivityId, grandParentId);
+
+    // Create event with activity expired
+    Event event = new Event();
+    ActivityExpiredEvent activityExpiredEvent = new ActivityExpiredEvent();
+    activityExpiredEvent.setActivityId(expiredActivityId);
+    event.setActivityExpired(activityExpiredEvent);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeExpiredActivity",
+        Event.class,
+        String.class,
+        WorkflowDirectedGraph.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    String result = (String) method.invoke(builder, event, currentActivityId, directGraph);
+
+    // Assert
+    String expectedTimeoutEventId = parentActivityId + "_timeout";
+    assertThat(result).isEqualTo(expectedTimeoutEventId);
+
+    // Verify the timeout event was registered
+    assertThat(directGraph.isRegistered(expectedTimeoutEventId)).isTrue();
+    WorkflowNode timeoutNode = directGraph.readWorkflowNode(expectedTimeoutEventId);
+    assertThat(timeoutNode.getElementType()).isEqualTo(WorkflowNodeType.ACTIVITY_EXPIRED_EVENT);
+    assertThat(timeoutNode.getWrappedType()).isEqualTo(ActivityExpiredEvent.class);
+
+    // Verify timeout value was set correctly
+    assertThat(timeoutNode.getEvent()).isInstanceOf(EventWithTimeout.class);
+    EventWithTimeout timeoutEvent = (EventWithTimeout) timeoutNode.getEvent();
+    assertThat(timeoutEvent.getTimeout()).isEqualTo("PT10M");
+  }
+
+  @Test
+  void shouldHandleExpiredActivityWithNullTimeoutWhenParentIsExclusiveFormReply() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String expiredActivityId = "expired-activity";
+    String parentActivityId = "parent-activity";
+    String grandParentId = "grand-parent";
+    String currentActivityId = "current-activity";
+
+    // Register expired activity node
+    directGraph.registerToDictionary(expiredActivityId,
+        new WorkflowNode().id(expiredActivityId).eventId(expiredActivityId));
+
+    // Register parent activity node with exclusive form reply event but null timeout
+    FormRepliedEvent formRepliedEvent = new FormRepliedEvent();
+    formRepliedEvent.setExclusive(true);
+    EventWithTimeout parentEvent = new EventWithTimeout();
+    parentEvent.setFormReplied(formRepliedEvent);
+    parentEvent.setTimeout(null);
+
+    WorkflowNode parentNode = new WorkflowNode()
+        .id(parentActivityId)
+        .eventId(parentActivityId)
+        .event(parentEvent)
+        .elementType(WorkflowNodeType.FORM_REPLIED_EVENT);
+    directGraph.registerToDictionary(parentActivityId, parentNode);
+
+    // Register grand parent node
+    directGraph.registerToDictionary(grandParentId,
+        new WorkflowNode().id(grandParentId).eventId(grandParentId));
+
+    // Register current activity node
+    directGraph.registerToDictionary(currentActivityId,
+        new WorkflowNode().id(currentActivityId).eventId(currentActivityId));
+
+    // Set up parent relationships
+    directGraph.addParent(expiredActivityId, parentActivityId);
+    directGraph.addParent(parentActivityId, grandParentId);
+
+    // Create event with activity expired
+    Event event = new Event();
+    ActivityExpiredEvent activityExpiredEvent = new ActivityExpiredEvent();
+    activityExpiredEvent.setActivityId(expiredActivityId);
+    event.setActivityExpired(activityExpiredEvent);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeExpiredActivity",
+        Event.class,
+        String.class,
+        WorkflowDirectedGraph.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    String result = (String) method.invoke(builder, event, currentActivityId, directGraph);
+
+    // Assert
+    String expectedTimeoutEventId = parentActivityId + "_timeout";
+    assertThat(result).isEqualTo(expectedTimeoutEventId);
+
+    // Verify the timeout event was registered with default timeout
+    assertThat(directGraph.isRegistered(expectedTimeoutEventId)).isTrue();
+    WorkflowNode timeoutNode = directGraph.readWorkflowNode(expectedTimeoutEventId);
+
+    // Verify timeout value defaults to PT24H
+    assertThat(timeoutNode.getEvent()).isInstanceOf(EventWithTimeout.class);
+    EventWithTimeout timeoutEvent = (EventWithTimeout) timeoutNode.getEvent();
+    assertThat(timeoutEvent.getTimeout()).isEqualTo("PT24H");
   }
 }
