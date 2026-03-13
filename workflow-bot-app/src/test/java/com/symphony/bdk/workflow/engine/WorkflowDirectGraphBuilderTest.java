@@ -10,9 +10,12 @@ import com.symphony.bdk.workflow.swadl.v1.Workflow;
 import com.symphony.bdk.workflow.swadl.v1.event.ActivityExpiredEvent;
 import com.symphony.bdk.workflow.swadl.v1.event.FormRepliedEvent;
 
+import org.apache.commons.lang3.tuple.Triple;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -1059,5 +1062,232 @@ class WorkflowDirectGraphBuilderTest {
     WorkflowNode timeoutNode = directGraph.readWorkflowNode(timeoutEventId);
     EventWithTimeout timeoutEvent = (EventWithTimeout) timeoutNode.getEvent();
     assertThat(timeoutEvent.getTimeout()).isEqualTo("PT30M");
+  }
+
+  @Test
+  void shouldHandleNonExclusiveFormRepliedEventInComputeSignal() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String formId = "test-form";
+    String activityId = "test-activity";
+    String eventNodeId = "form-reply_" + formId;
+
+    // Register activity node
+    directGraph.registerToDictionary(activityId,
+        new WorkflowNode().id(activityId).eventId(activityId));
+
+    // Register form node (required by validateExistingNodeId)
+    directGraph.registerToDictionary(formId,
+        new WorkflowNode().id(formId).eventId(formId));
+    directGraph.addParent(formId, "some-parent");
+
+    // Create FormRepliedEvent with non-exclusive
+    FormRepliedEvent formRepliedEvent = new FormRepliedEvent();
+    formRepliedEvent.setFormId(formId);
+    formRepliedEvent.setExclusive(false);
+    Event event = new Event();
+    event.setFormReplied(formRepliedEvent);
+
+    // Create Activity with BaseActivity
+    com.symphony.bdk.workflow.swadl.v1.Activity activity = mock(com.symphony.bdk.workflow.swadl.v1.Activity.class);
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity baseActivity =
+        mock(com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class);
+    when(activity.getActivity()).thenReturn(baseActivity);
+    when(baseActivity.getId()).thenReturn(activityId);
+
+    List<com.symphony.bdk.workflow.swadl.v1.Activity> activities = Collections.singletonList(activity);
+
+    // Create Triple
+    Triple<String, String, Class<?>> triple = Triple.of(null, eventNodeId, FormRepliedEvent.class);
+
+    // Create RelationalEvents
+    com.symphony.bdk.workflow.swadl.v1.activity.RelationalEvents onEvents =
+        new com.symphony.bdk.workflow.swadl.v1.activity.RelationalEvents(
+            Collections.singletonList(event), false);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeSignal",
+        int.class,
+        List.class,
+        Triple.class,
+        Event.class,
+        com.symphony.bdk.workflow.event.WorkflowEventType.class,
+        com.symphony.bdk.workflow.swadl.v1.activity.RelationalEvents.class,
+        WorkflowDirectedGraph.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, 0, activities, triple, event,
+        com.symphony.bdk.workflow.event.WorkflowEventType.FORM_REPLIED, onEvents, directGraph);
+
+    // Assert
+    assertThat(directGraph.isRegistered(eventNodeId)).isTrue();
+    WorkflowNode registeredNode = directGraph.readWorkflowNode(eventNodeId);
+    assertThat(registeredNode.getElementType()).isEqualTo(WorkflowNodeType.FORM_REPLIED_EVENT);
+  }
+
+  @Test
+  void shouldHandleTimeFiredEventInComputeSignal() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String activityId = "test-activity";
+    String eventNodeId = "timerFired_date_2024-01-01";
+
+    // Register activity node
+    directGraph.registerToDictionary(activityId,
+        new WorkflowNode().id(activityId).eventId(activityId));
+
+    // Create TimerFiredEvent
+    com.symphony.bdk.workflow.swadl.v1.event.TimerFiredEvent timerFiredEvent =
+        new com.symphony.bdk.workflow.swadl.v1.event.TimerFiredEvent();
+    timerFiredEvent.setAt("2024-01-01");
+    Event event = new Event();
+    event.setTimerFired(timerFiredEvent);
+
+    // Create Activity with BaseActivity
+    com.symphony.bdk.workflow.swadl.v1.Activity activity = mock(com.symphony.bdk.workflow.swadl.v1.Activity.class);
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity baseActivity =
+        mock(com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class);
+    when(activity.getActivity()).thenReturn(baseActivity);
+    when(baseActivity.getId()).thenReturn(activityId);
+
+    List<com.symphony.bdk.workflow.swadl.v1.Activity> activities = Collections.singletonList(activity);
+
+    // Create Triple
+    Triple<String, String, Class<?>> triple = Triple.of(null, eventNodeId,
+        com.symphony.bdk.workflow.swadl.v1.event.TimerFiredEvent.class);
+
+    // Create RelationalEvents
+    com.symphony.bdk.workflow.swadl.v1.activity.RelationalEvents onEvents =
+        new com.symphony.bdk.workflow.swadl.v1.activity.RelationalEvents(
+            Collections.singletonList(event), false);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeSignal",
+        int.class,
+        List.class,
+        Triple.class,
+        Event.class,
+        com.symphony.bdk.workflow.event.WorkflowEventType.class,
+        com.symphony.bdk.workflow.swadl.v1.activity.RelationalEvents.class,
+        WorkflowDirectedGraph.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, 0, activities, triple, event,
+        com.symphony.bdk.workflow.event.WorkflowEventType.TIME_FIRED, onEvents, directGraph);
+
+    // Assert
+    assertThat(directGraph.isRegistered(eventNodeId)).isTrue();
+    WorkflowNode registeredNode = directGraph.readWorkflowNode(eventNodeId);
+    assertThat(registeredNode.getElementType()).isEqualTo(WorkflowNodeType.TIMER_FIRED_EVENT);
+    assertThat(registeredNode.getEvent()).isEqualTo(event);
+  }
+
+  @Test
+  void shouldHandleDefaultCaseInComputeSignal() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String activityId = "test-activity";
+    String eventNodeId = "message-received_test-message";
+    String parentId = "parent-activity";
+
+    // Register parent node
+    directGraph.registerToDictionary(parentId,
+        new WorkflowNode().id(parentId).eventId(parentId));
+
+    // Register activity node
+    directGraph.registerToDictionary(activityId,
+        new WorkflowNode().id(activityId).eventId(activityId));
+
+    // Set up parent relationship for eventNodeId
+    directGraph.addParent(eventNodeId, parentId);
+
+    // Create MessageReceivedEvent
+    com.symphony.bdk.workflow.swadl.v1.event.MessageReceivedEvent messageReceivedEvent =
+        new com.symphony.bdk.workflow.swadl.v1.event.MessageReceivedEvent();
+    messageReceivedEvent.setContent("test-message");
+    Event event = new Event();
+    event.setMessageReceived(messageReceivedEvent);
+
+    // Create Activity with BaseActivity
+    com.symphony.bdk.workflow.swadl.v1.Activity activity = mock(com.symphony.bdk.workflow.swadl.v1.Activity.class);
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity baseActivity =
+        mock(com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class);
+    when(activity.getActivity()).thenReturn(baseActivity);
+    when(baseActivity.getId()).thenReturn(activityId);
+
+    // Mock getOn() to return an EventWithTimeout with no timeout
+    EventWithTimeout onEvent = new EventWithTimeout();
+    onEvent.setTimeout(null);
+    when(baseActivity.getOn()).thenReturn(onEvent);
+
+    List<com.symphony.bdk.workflow.swadl.v1.Activity> activities = Collections.singletonList(activity);
+
+    // Create Triple
+    Triple<String, String, Class<?>> triple = Triple.of(null, eventNodeId,
+        com.symphony.bdk.workflow.swadl.v1.event.MessageReceivedEvent.class);
+
+    // Create RelationalEvents
+    com.symphony.bdk.workflow.swadl.v1.activity.RelationalEvents onEvents =
+        new com.symphony.bdk.workflow.swadl.v1.activity.RelationalEvents(
+            Collections.singletonList(event), false);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeSignal",
+        int.class,
+        List.class,
+        Triple.class,
+        Event.class,
+        com.symphony.bdk.workflow.event.WorkflowEventType.class,
+        com.symphony.bdk.workflow.swadl.v1.activity.RelationalEvents.class,
+        WorkflowDirectedGraph.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, 0, activities, triple, event,
+        com.symphony.bdk.workflow.event.WorkflowEventType.MESSAGE_RECEIVED, onEvents, directGraph);
+
+    // Assert
+    assertThat(directGraph.isRegistered(eventNodeId)).isTrue();
+    WorkflowNode registeredNode = directGraph.readWorkflowNode(eventNodeId);
+    assertThat(registeredNode.getElementType()).isEqualTo(WorkflowNodeType.SIGNAL_EVENT);
+    assertThat(registeredNode.getEvent()).isEqualTo(event);
   }
 }
