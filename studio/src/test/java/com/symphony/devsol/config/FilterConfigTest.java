@@ -18,10 +18,28 @@ import static org.hamcrest.Matchers.notNullValue;
 class FilterConfigTest {
 
     @Mock
+    private AuthFilter authFilter;
+
+    @Mock
     private WdkFilter wdkFilter;
 
     @InjectMocks
     private FilterConfig filterConfig;
+
+    @Test
+    void authFilterRegistrationShouldConfigureFilterWithUrlPatternsAndOrder() {
+        // Arrange
+        // (no additional setup needed)
+
+        // Act
+        FilterRegistrationBean<OncePerRequestFilter> result = filterConfig.authFilterRegistration(authFilter);
+
+        // Assert
+        assertThat(result, is(notNullValue()));
+        assertThat(result.getFilter(), is(authFilter));
+        assertThat(result.getUrlPatterns(), contains("/v1/*", "/gallery/*", "/symphony/*"));
+        assertThat(result.getOrder(), is(Ordered.HIGHEST_PRECEDENCE));
+    }
 
     @Test
     void wdkFilterRegistrationShouldConfigureFilterWithUrlPatternsAndOrder() {
