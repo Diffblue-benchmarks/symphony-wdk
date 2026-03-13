@@ -279,4 +279,156 @@ class ProcessingMessageToSwadlErrorTest {
     assertThat(result).isNotNull();
     assertThat(result.getLineNumber()).isEqualTo(35);
   }
+
+  @Test
+  void shouldDrillDownReportsForAllOfError() {
+    // Arrange
+    ObjectNode yamlTree = mapper.createObjectNode();
+    yamlTree.put("testField", "testValue");
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/testProperty");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "allOf");
+
+    // Create reports array with nested reports to trigger drillDownReports
+    ArrayNode reportsArray = mapper.createArrayNode();
+    ArrayNode nestedReportArray = mapper.createArrayNode();
+
+    ObjectNode nestedError = mapper.createObjectNode();
+    ObjectNode nestedInstanceNode = mapper.createObjectNode();
+    nestedInstanceNode.put("pointer", "/testProperty/field");
+    nestedError.set("instance", nestedInstanceNode);
+    nestedError.put("keyword", "required");
+    ArrayNode missingArray = mapper.createArrayNode();
+    missingArray.add("missingField");
+    nestedError.set("missing", missingArray);
+
+    nestedReportArray.add(nestedError);
+    reportsArray.add(nestedReportArray);
+    errorJson.set("reports", reportsArray);
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Original error message");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.of(40));
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getLineNumber()).isEqualTo(40);
+    assertThat(result.getMessage()).contains("Missing property");
+    assertThat(result.getMessage()).contains("missingField");
+  }
+
+  @Test
+  void shouldDrillDownReportsForOneOfError() {
+    // Arrange
+    ObjectNode yamlTree = mapper.createObjectNode();
+    yamlTree.put("testField", "testValue");
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/testProperty");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "oneOf");
+
+    // Create reports array with nested reports to trigger drillDownReports
+    ArrayNode reportsArray = mapper.createArrayNode();
+    ArrayNode nestedReportArray = mapper.createArrayNode();
+
+    ObjectNode nestedError = mapper.createObjectNode();
+    ObjectNode nestedInstanceNode = mapper.createObjectNode();
+    nestedInstanceNode.put("pointer", "/testProperty");
+    nestedError.set("instance", nestedInstanceNode);
+    nestedError.put("keyword", "pattern");
+    nestedError.put("regex", "^[a-zA-Z]+$");
+
+    nestedReportArray.add(nestedError);
+    reportsArray.add(nestedReportArray);
+    errorJson.set("reports", reportsArray);
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Original error message");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.of(45));
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getLineNumber()).isEqualTo(45);
+    assertThat(result.getMessage()).contains("Invalid property");
+    assertThat(result.getMessage()).contains("must match pattern");
+  }
+
+  @Test
+  void shouldReturnOriginalMessageWhenDrillDownReportsHasEmptyReports() {
+    // Arrange
+    ObjectNode yamlTree = mapper.createObjectNode();
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/testProperty");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "allOf");
+
+    // Create empty reports array - drillDownReports should return original message
+    ArrayNode reportsArray = mapper.createArrayNode();
+    errorJson.set("reports", reportsArray);
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Fallback error message");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.of(50));
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getLineNumber()).isEqualTo(50);
+    assertThat(result.getMessage()).contains("Fallback error message");
+  }
+
+  @Test
+  void shouldReturnOriginalMessageWhenReportHasNoNestedReports() {
+    // Arrange
+    ObjectNode yamlTree = mapper.createObjectNode();
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/testProperty");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "oneOf");
+
+    // Create reports array with an empty nested array - covers the case where inner loop doesn't execute
+    ArrayNode reportsArray = mapper.createArrayNode();
+    ArrayNode emptyNestedArray = mapper.createArrayNode();
+    reportsArray.add(emptyNestedArray);
+    errorJson.set("reports", reportsArray);
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Original message");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.of(55));
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getLineNumber()).isEqualTo(55);
+    // drillDownReports returns the toErrorMessage result when no nested reports found
+    assertThat(result.getMessage()).contains("Unknown property");
+    assertThat(result.getMessage()).contains("testProperty");
+  }
 }
