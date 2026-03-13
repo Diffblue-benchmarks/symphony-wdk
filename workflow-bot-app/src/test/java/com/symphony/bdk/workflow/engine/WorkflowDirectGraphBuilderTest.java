@@ -401,4 +401,230 @@ class WorkflowDirectGraphBuilderTest {
     EventWithTimeout timeoutEvent = (EventWithTimeout) timeoutNode.getEvent();
     assertThat(timeoutEvent.getTimeout()).isEqualTo("PT24H");
   }
+
+  @Test
+  void shouldSetDefaultTimeoutForNonExclusiveFormReplyEventWithEmptyTimeout() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String eventNodeId = "form-reply_form-123";
+    String activityId = "target-activity";
+    String signalEventId = "signal-event-id";
+
+    // Register and set up parent relationship for form-123 (required by validateExistingNodeId)
+    directGraph.registerToDictionary("form-123",
+        new WorkflowNode().id("form-123").eventId("form-123"));
+    directGraph.addParent("form-123", "some-parent");
+
+    // Create EventWithTimeout with FormRepliedEvent and empty timeout
+    FormRepliedEvent formRepliedEvent = new FormRepliedEvent();
+    formRepliedEvent.setFormId("form-123");
+    formRepliedEvent.setExclusive(false);
+    EventWithTimeout event = new EventWithTimeout();
+    event.setFormReplied(formRepliedEvent);
+    event.setTimeout("");
+
+    // Create signal event node
+    WorkflowNode signalEvent = new WorkflowNode()
+        .id(signalEventId)
+        .eventId(eventNodeId);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeNoExclusiveFormReplyEvent",
+        String.class,
+        Event.class,
+        WorkflowDirectedGraph.class,
+        WorkflowNode.class,
+        String.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, eventNodeId, event, directGraph, signalEvent, activityId);
+
+    // Assert
+    assertThat(event.getTimeout()).isEqualTo("PT24H");
+    assertThat(directGraph.isRegistered(signalEventId)).isTrue();
+    WorkflowNode registeredNode = directGraph.readWorkflowNode(signalEventId);
+    assertThat(registeredNode.getElementType()).isEqualTo(WorkflowNodeType.FORM_REPLIED_EVENT);
+  }
+
+  @Test
+  void shouldNotSetTimeoutForNonExclusiveFormReplyEventWithExistingTimeout() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String eventNodeId = "form-reply_form-456";
+    String activityId = "target-activity";
+    String signalEventId = "signal-event-id";
+
+    // Register and set up parent relationship for form-456 (required by validateExistingNodeId)
+    directGraph.registerToDictionary("form-456",
+        new WorkflowNode().id("form-456").eventId("form-456"));
+    directGraph.addParent("form-456", "some-parent");
+
+    // Create EventWithTimeout with FormRepliedEvent and existing timeout
+    FormRepliedEvent formRepliedEvent = new FormRepliedEvent();
+    formRepliedEvent.setFormId("form-456");
+    formRepliedEvent.setExclusive(false);
+    EventWithTimeout event = new EventWithTimeout();
+    event.setFormReplied(formRepliedEvent);
+    event.setTimeout("PT10M");
+
+    // Create signal event node
+    WorkflowNode signalEvent = new WorkflowNode()
+        .id(signalEventId)
+        .eventId(eventNodeId);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeNoExclusiveFormReplyEvent",
+        String.class,
+        Event.class,
+        WorkflowDirectedGraph.class,
+        WorkflowNode.class,
+        String.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, eventNodeId, event, directGraph, signalEvent, activityId);
+
+    // Assert
+    assertThat(event.getTimeout()).isEqualTo("PT10M");
+    assertThat(directGraph.isRegistered(signalEventId)).isTrue();
+    WorkflowNode registeredNode = directGraph.readWorkflowNode(signalEventId);
+    assertThat(registeredNode.getElementType()).isEqualTo(WorkflowNodeType.FORM_REPLIED_EVENT);
+  }
+
+  @Test
+  void shouldHandleNonExclusiveFormReplyEventWithNullTimeout() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String eventNodeId = "form-reply_form-789";
+    String activityId = "target-activity";
+    String signalEventId = "signal-event-id";
+
+    // Register and set up parent relationship for form-789 (required by validateExistingNodeId)
+    directGraph.registerToDictionary("form-789",
+        new WorkflowNode().id("form-789").eventId("form-789"));
+    directGraph.addParent("form-789", "some-parent");
+
+    // Create EventWithTimeout with FormRepliedEvent and null timeout
+    FormRepliedEvent formRepliedEvent = new FormRepliedEvent();
+    formRepliedEvent.setFormId("form-789");
+    formRepliedEvent.setExclusive(false);
+    EventWithTimeout event = new EventWithTimeout();
+    event.setFormReplied(formRepliedEvent);
+    event.setTimeout(null);
+
+    // Create signal event node
+    WorkflowNode signalEvent = new WorkflowNode()
+        .id(signalEventId)
+        .eventId(eventNodeId);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeNoExclusiveFormReplyEvent",
+        String.class,
+        Event.class,
+        WorkflowDirectedGraph.class,
+        WorkflowNode.class,
+        String.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, eventNodeId, event, directGraph, signalEvent, activityId);
+
+    // Assert
+    assertThat(event.getTimeout()).isEqualTo("PT24H");
+    assertThat(directGraph.isRegistered(signalEventId)).isTrue();
+    WorkflowNode registeredNode = directGraph.readWorkflowNode(signalEventId);
+    assertThat(registeredNode.getElementType()).isEqualTo(WorkflowNodeType.FORM_REPLIED_EVENT);
+  }
+
+  @Test
+  void shouldHandleNonExclusiveFormReplyEventWithNonEventWithTimeoutEvent() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String eventNodeId = "form-reply_form-999";
+    String activityId = "target-activity";
+    String signalEventId = "signal-event-id";
+
+    // Register and set up parent relationship for form-999 (required by validateExistingNodeId)
+    directGraph.registerToDictionary("form-999",
+        new WorkflowNode().id("form-999").eventId("form-999"));
+    directGraph.addParent("form-999", "some-parent");
+
+    // Create a regular Event (not EventWithTimeout)
+    Event event = new Event();
+    FormRepliedEvent formRepliedEvent = new FormRepliedEvent();
+    formRepliedEvent.setFormId("form-999");
+    formRepliedEvent.setExclusive(false);
+    event.setFormReplied(formRepliedEvent);
+
+    // Create signal event node
+    WorkflowNode signalEvent = new WorkflowNode()
+        .id(signalEventId)
+        .eventId(eventNodeId);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeNoExclusiveFormReplyEvent",
+        String.class,
+        Event.class,
+        WorkflowDirectedGraph.class,
+        WorkflowNode.class,
+        String.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, eventNodeId, event, directGraph, signalEvent, activityId);
+
+    // Assert
+    assertThat(directGraph.isRegistered(signalEventId)).isTrue();
+    WorkflowNode registeredNode = directGraph.readWorkflowNode(signalEventId);
+    assertThat(registeredNode.getElementType()).isEqualTo(WorkflowNodeType.FORM_REPLIED_EVENT);
+  }
 }
