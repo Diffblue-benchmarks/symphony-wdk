@@ -1,5 +1,6 @@
 package com.symphony.bdk.workflow.engine.camunda;
 
+import com.symphony.bdk.core.service.datafeed.EventPayload;
 import com.symphony.bdk.spring.events.RealTimeEvent;
 import com.symphony.bdk.workflow.engine.ExecutionParameters;
 import com.symphony.bdk.workflow.engine.camunda.bpmn.CamundaBpmnBuilder;
@@ -24,11 +25,30 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CamundaEngineTest {
+
+  // Test helper classes for EventPayload testing
+  static class TestEventPayload implements EventPayload {
+    private Long eventTimestamp;
+
+    @Override
+    public Long getEventTimestamp() {
+      return eventTimestamp;
+    }
+
+    @Override
+    public void setEventTimestamp(Long eventTimestamp) {
+      this.eventTimestamp = eventTimestamp;
+    }
+  }
+
+  static class TestEventPayloadSubclass extends TestEventPayload {
+  }
 
   @Mock
   private RepositoryService repositoryService;
@@ -38,6 +58,9 @@ class CamundaEngineTest {
 
   @Mock
   private RealTimeEventProcessor<RequestReceivedEvent> requestReceivedEventProcessor;
+
+  @Mock
+  private RealTimeEventProcessor<TestEventPayload> testEventPayloadProcessor;
 
   @Mock
   private AuditTrailLogAction auditTrailLogger;
@@ -160,5 +183,53 @@ class CamundaEngineTest {
     assertThat(requestEvent.getArguments()).isEqualTo(arguments);
     assertThat(requestEvent.getToken()).isNull();
     assertThat(requestEvent.getWorkflowId()).isEqualTo(workflowId);
+  }
+
+  @Test
+  void shouldProcessEventUsingSourceClassWhenEventSourceIsNotEventPayload() throws Exception {
+    // Arrange
+    RequestReceivedEvent requestEvent = new RequestReceivedEvent();
+    requestEvent.setWorkflowId("test-workflow");
+    RealTimeEvent<RequestReceivedEvent> event = new RealTimeEvent<>(null, requestEvent);
+
+    // Act
+    camundaEngine.onEvent(event);
+
+    // Assert
+    verify(requestReceivedEventProcessor).process(event);
+  }
+
+  @Test
+  void shouldProcessEventUsingSuperclassWhenEventSourceIsEventPayload() throws Exception {
+    // Arrange
+    TestEventPayloadSubclass eventSource = new TestEventPayloadSubclass();
+    RealTimeEvent<TestEventPayloadSubclass> event = new RealTimeEvent<>(null, eventSource);
+
+    when(testEventPayloadProcessor.sourceType()).thenReturn((Class) TestEventPayload.class);
+
+    List<RealTimeEventProcessor<?>> processors = List.of(requestReceivedEventProcessor, testEventPayloadProcessor);
+    camundaEngine = new CamundaEngine(repositoryService, bpmnBuilder, processors, auditTrailLogger);
+
+    // Act
+    camundaEngine.onEvent(event);
+
+    // Assert
+    verify(testEventPayloadProcessor).process(any());
+  }
+
+  @Test
+  void shouldCatchExceptionAndLogErrorWhenProcessorThrowsException() throws Exception {
+    // Arrange
+    RequestReceivedEvent requestEvent = new RequestReceivedEvent();
+    requestEvent.setWorkflowId("test-workflow");
+    RealTimeEvent<RequestReceivedEvent> event = new RealTimeEvent<>(null, requestEvent);
+
+    doThrow(new RuntimeException("Test exception")).when(requestReceivedEventProcessor).process(any());
+
+    // Act
+    camundaEngine.onEvent(event);
+
+    // Assert
+    verify(requestReceivedEventProcessor).process(event);
   }
 }
