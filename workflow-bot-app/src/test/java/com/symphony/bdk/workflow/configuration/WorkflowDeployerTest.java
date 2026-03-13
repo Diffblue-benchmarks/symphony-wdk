@@ -1,10 +1,13 @@
 package com.symphony.bdk.workflow.configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -251,5 +254,106 @@ class WorkflowDeployerTest {
     verify(workflowEngine, never()).deploy(any(CamundaTranslatedWorkflowContext.class));
     verify(workflowEngine, never()).undeployByWorkflowId(any());
     assertThat(deployedWorkflows).containsEntry(workflowFile, Pair.of("test-workflow", false));
+  }
+
+  @Test
+  void shouldThrowIllegalArgumentExceptionWhenPathIsNotDirectory(@TempDir Path tempDir) throws IOException {
+    Path file = tempDir.resolve("not-a-directory.txt");
+    Files.createFile(file);
+
+    assertThatThrownBy(() -> deployer.addAllWorkflowsFromFolder(file))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Could not find workflows folder to monitor with path: " + file);
+  }
+
+  @Test
+  void shouldThrowIllegalArgumentExceptionWhenPathDoesNotExist(@TempDir Path tempDir) {
+    Path nonExistentPath = tempDir.resolve("non-existent");
+
+    assertThatThrownBy(() -> deployer.addAllWorkflowsFromFolder(nonExistentPath))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Could not find workflows folder to monitor with path: " + nonExistentPath);
+  }
+
+  @Test
+  void shouldAddAllYamlWorkflowsFromFolder(@TempDir Path tempDir) throws Exception {
+    Path yamlFile1 = tempDir.resolve("workflow1.yaml");
+    Path yamlFile2 = tempDir.resolve("workflow2.yml");
+    String workflowContent = "id: test-workflow\n"
+        + "activities:\n"
+        + "  - execute-script:\n"
+        + "      id: scriptActivity\n"
+        + "      on:\n"
+        + "        message-received:\n"
+        + "          content: /test\n"
+        + "      script: |\n";
+    Files.writeString(yamlFile1, workflowContent);
+    Files.writeString(yamlFile2, workflowContent);
+
+    CamundaTranslatedWorkflowContext context = mock(CamundaTranslatedWorkflowContext.class);
+    when(workflowEngine.translate(any())).thenReturn(context);
+
+    deployer.addAllWorkflowsFromFolder(tempDir);
+
+    verify(workflowEngine, times(2)).translate(any());
+    verify(workflowEngine, times(2)).deploy(any(CamundaTranslatedWorkflowContext.class));
+  }
+
+  @Test
+  void shouldSkipNonYamlFilesWhenAddingWorkflows(@TempDir Path tempDir) throws Exception {
+    Path yamlFile = tempDir.resolve("workflow.yaml");
+    Path txtFile = tempDir.resolve("readme.txt");
+    Path jsonFile = tempDir.resolve("config.json");
+    String workflowContent = "id: test-workflow\n"
+        + "activities:\n"
+        + "  - execute-script:\n"
+        + "      id: scriptActivity\n"
+        + "      on:\n"
+        + "        message-received:\n"
+        + "          content: /test\n"
+        + "      script: |\n";
+    Files.writeString(yamlFile, workflowContent);
+    Files.writeString(txtFile, "Some text");
+    Files.writeString(jsonFile, "{}");
+
+    CamundaTranslatedWorkflowContext context = mock(CamundaTranslatedWorkflowContext.class);
+    when(workflowEngine.translate(any())).thenReturn(context);
+
+    deployer.addAllWorkflowsFromFolder(tempDir);
+
+    verify(workflowEngine).translate(any());
+    verify(workflowEngine).deploy(any(CamundaTranslatedWorkflowContext.class));
+  }
+
+  @Test
+  void shouldContinueProcessingWhenOneWorkflowFails(@TempDir Path tempDir) throws Exception {
+    Path invalidYamlFile = tempDir.resolve("invalid-workflow.yaml");
+    Path validYamlFile = tempDir.resolve("valid-workflow.yaml");
+    Files.writeString(invalidYamlFile, "invalid: yaml: content:");
+    String validWorkflowContent = "id: valid-workflow\n"
+        + "activities:\n"
+        + "  - execute-script:\n"
+        + "      id: scriptActivity\n"
+        + "      on:\n"
+        + "        message-received:\n"
+        + "          content: /test\n"
+        + "      script: |\n";
+    Files.writeString(validYamlFile, validWorkflowContent);
+
+    CamundaTranslatedWorkflowContext context = mock(CamundaTranslatedWorkflowContext.class);
+    when(workflowEngine.translate(any())).thenReturn(context);
+
+    deployer.addAllWorkflowsFromFolder(tempDir);
+
+    // Should continue processing despite the invalid file
+    verify(workflowEngine, atLeastOnce()).translate(any());
+  }
+
+  @Test
+  void shouldHandleEmptyDirectory(@TempDir Path tempDir) {
+    deployer.addAllWorkflowsFromFolder(tempDir);
+
+    verify(workflowEngine, never()).translate(any());
+    verify(workflowEngine, never()).deploy(any(CamundaTranslatedWorkflowContext.class));
   }
 }
