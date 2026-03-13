@@ -627,4 +627,437 @@ class WorkflowDirectGraphBuilderTest {
     WorkflowNode registeredNode = directGraph.readWorkflowNode(signalEventId);
     assertThat(registeredNode.getElementType()).isEqualTo(WorkflowNodeType.FORM_REPLIED_EVENT);
   }
+
+  @Test
+  void shouldComputeActivityTimeoutForFormRepliedEventWithDefaultTimeout() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String eventNodeId = "form-reply_form-123";
+    String signalEventId = "signal-event-123";
+    String activityId = "activity-123";
+    String parentId = "parent-activity";
+
+    // Register required nodes
+    directGraph.registerToDictionary("form-123",
+        new WorkflowNode().id("form-123").eventId("form-123"));
+    directGraph.addParent("form-123", "some-parent");
+    directGraph.registerToDictionary(parentId,
+        new WorkflowNode().id(parentId).eventId(parentId));
+    directGraph.registerToDictionary(signalEventId,
+        new WorkflowNode().id(signalEventId).eventId(eventNodeId));
+    directGraph.addParent(signalEventId, parentId);
+
+    // Create EventWithTimeout without timeout
+    EventWithTimeout event = new EventWithTimeout();
+    FormRepliedEvent formRepliedEvent = new FormRepliedEvent();
+    formRepliedEvent.setFormId("form-123");
+    formRepliedEvent.setExclusive(true);
+    event.setFormReplied(formRepliedEvent);
+
+    // Create signal event node
+    WorkflowNode signalEvent = new WorkflowNode()
+        .id(signalEventId)
+        .eventId(eventNodeId);
+
+    // Create BaseActivity mock with empty timeout
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity activity =
+        mock(com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class);
+    EventWithTimeout onEvent = new EventWithTimeout();
+    onEvent.setTimeout("");
+    when(activity.getOn()).thenReturn(onEvent);
+    when(activity.getId()).thenReturn(activityId);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeActivityTimeout",
+        int.class,
+        String.class,
+        Event.class,
+        com.symphony.bdk.workflow.event.WorkflowEventType.class,
+        boolean.class,
+        WorkflowDirectedGraph.class,
+        WorkflowNode.class,
+        com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, 1, eventNodeId, event,
+        com.symphony.bdk.workflow.event.WorkflowEventType.FORM_REPLIED, false,
+        directGraph, signalEvent, activity);
+
+    // Assert
+    assertThat(signalEvent.getElementType()).isEqualTo(WorkflowNodeType.FORM_REPLIED_EVENT);
+    String timeoutEventId = signalEventId + "_timeout";
+    assertThat(directGraph.isRegistered(timeoutEventId)).isTrue();
+  }
+
+  @Test
+  void shouldComputeActivityTimeoutForFormRepliedEventWhenParallel() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String eventNodeId = "form-reply_form-456";
+    String signalEventId = "signal-event-456";
+    String activityId = "activity-456";
+    String parentId = "parent-activity";
+
+    // Register required nodes
+    directGraph.registerToDictionary("form-456",
+        new WorkflowNode().id("form-456").eventId("form-456"));
+    directGraph.addParent("form-456", "some-parent");
+    directGraph.registerToDictionary(parentId,
+        new WorkflowNode().id(parentId).eventId(parentId));
+    directGraph.registerToDictionary(signalEventId,
+        new WorkflowNode().id(signalEventId).eventId(eventNodeId));
+    directGraph.addParent(signalEventId, parentId);
+
+    // Create EventWithTimeout without timeout
+    EventWithTimeout event = new EventWithTimeout();
+    FormRepliedEvent formRepliedEvent = new FormRepliedEvent();
+    formRepliedEvent.setFormId("form-456");
+    formRepliedEvent.setExclusive(true);
+    event.setFormReplied(formRepliedEvent);
+
+    // Create signal event node
+    WorkflowNode signalEvent = new WorkflowNode()
+        .id(signalEventId)
+        .eventId(eventNodeId);
+
+    // Create BaseActivity mock with empty timeout
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity activity =
+        mock(com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class);
+    EventWithTimeout onEvent = new EventWithTimeout();
+    onEvent.setTimeout("");
+    when(activity.getOn()).thenReturn(onEvent);
+    when(activity.getId()).thenReturn(activityId);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeActivityTimeout",
+        int.class,
+        String.class,
+        Event.class,
+        com.symphony.bdk.workflow.event.WorkflowEventType.class,
+        boolean.class,
+        WorkflowDirectedGraph.class,
+        WorkflowNode.class,
+        com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, 1, eventNodeId, event,
+        com.symphony.bdk.workflow.event.WorkflowEventType.FORM_REPLIED, true,
+        directGraph, signalEvent, activity);
+
+    // Assert
+    assertThat(signalEvent.getElementType()).isEqualTo(WorkflowNodeType.FORM_REPLIED_EVENT);
+    String timeoutEventId = signalEventId + "_timeout";
+    assertThat(directGraph.isRegistered(timeoutEventId)).isFalse();
+  }
+
+  @Test
+  void shouldComputeActivityTimeoutForFormRepliedEventAtIndexZero() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String eventNodeId = "form-reply_form-789";
+    String signalEventId = "signal-event-789";
+    String activityId = "activity-789";
+
+    // Create EventWithTimeout without timeout
+    EventWithTimeout event = new EventWithTimeout();
+    FormRepliedEvent formRepliedEvent = new FormRepliedEvent();
+    formRepliedEvent.setFormId("form-789");
+    formRepliedEvent.setExclusive(true);
+    event.setFormReplied(formRepliedEvent);
+
+    // Create signal event node
+    WorkflowNode signalEvent = new WorkflowNode()
+        .id(signalEventId)
+        .eventId(eventNodeId);
+
+    // Create BaseActivity mock with empty timeout
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity activity =
+        mock(com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class);
+    EventWithTimeout onEvent = new EventWithTimeout();
+    onEvent.setTimeout("");
+    when(activity.getOn()).thenReturn(onEvent);
+    when(activity.getId()).thenReturn(activityId);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeActivityTimeout",
+        int.class,
+        String.class,
+        Event.class,
+        com.symphony.bdk.workflow.event.WorkflowEventType.class,
+        boolean.class,
+        WorkflowDirectedGraph.class,
+        WorkflowNode.class,
+        com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, 0, eventNodeId, event,
+        com.symphony.bdk.workflow.event.WorkflowEventType.FORM_REPLIED, false,
+        directGraph, signalEvent, activity);
+
+    // Assert
+    assertThat(signalEvent.getElementType()).isEqualTo(WorkflowNodeType.FORM_REPLIED_EVENT);
+  }
+
+  @Test
+  void shouldComputeActivityTimeoutWithEventTimeout() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String eventNodeId = "message-received_hello";
+    String signalEventId = "signal-event-msg";
+    String activityId = "activity-msg";
+    String parentId = "parent-activity";
+
+    // Register required nodes
+    directGraph.registerToDictionary(parentId,
+        new WorkflowNode().id(parentId).eventId(parentId));
+    directGraph.registerToDictionary(signalEventId,
+        new WorkflowNode().id(signalEventId).eventId(eventNodeId));
+    directGraph.addParent(signalEventId, parentId);
+
+    // Create EventWithTimeout with timeout
+    EventWithTimeout event = new EventWithTimeout();
+    event.setTimeout("PT15M");
+    com.symphony.bdk.workflow.swadl.v1.event.MessageReceivedEvent messageEvent =
+        new com.symphony.bdk.workflow.swadl.v1.event.MessageReceivedEvent();
+    messageEvent.setContent("hello");
+    event.setMessageReceived(messageEvent);
+
+    // Create signal event node
+    WorkflowNode signalEvent = new WorkflowNode()
+        .id(signalEventId)
+        .eventId(eventNodeId);
+
+    // Create BaseActivity mock with no timeout
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity activity =
+        mock(com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class);
+    EventWithTimeout onEvent = new EventWithTimeout();
+    onEvent.setTimeout(null);
+    when(activity.getOn()).thenReturn(onEvent);
+    when(activity.getId()).thenReturn(activityId);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeActivityTimeout",
+        int.class,
+        String.class,
+        Event.class,
+        com.symphony.bdk.workflow.event.WorkflowEventType.class,
+        boolean.class,
+        WorkflowDirectedGraph.class,
+        WorkflowNode.class,
+        com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, 1, eventNodeId, event,
+        com.symphony.bdk.workflow.event.WorkflowEventType.MESSAGE_RECEIVED, false,
+        directGraph, signalEvent, activity);
+
+    // Assert
+    assertThat(signalEvent.getElementType()).isEqualTo(WorkflowNodeType.SIGNAL_EVENT);
+    String timeoutEventId = signalEventId + "_timeout";
+    assertThat(directGraph.isRegistered(timeoutEventId)).isTrue();
+    WorkflowNode timeoutNode = directGraph.readWorkflowNode(timeoutEventId);
+    EventWithTimeout timeoutEvent = (EventWithTimeout) timeoutNode.getEvent();
+    assertThat(timeoutEvent.getTimeout()).isEqualTo("PT15M");
+  }
+
+  @Test
+  void shouldComputeActivityTimeoutWithActivityTimeout() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String eventNodeId = "message-received_world";
+    String signalEventId = "signal-event-msg2";
+    String activityId = "activity-msg2";
+    String parentId = "parent-activity";
+
+    // Register required nodes
+    directGraph.registerToDictionary(parentId,
+        new WorkflowNode().id(parentId).eventId(parentId));
+    directGraph.registerToDictionary(signalEventId,
+        new WorkflowNode().id(signalEventId).eventId(eventNodeId));
+    directGraph.addParent(signalEventId, parentId);
+
+    // Create Event without timeout (not EventWithTimeout)
+    Event event = new Event();
+    com.symphony.bdk.workflow.swadl.v1.event.MessageReceivedEvent messageEvent =
+        new com.symphony.bdk.workflow.swadl.v1.event.MessageReceivedEvent();
+    messageEvent.setContent("world");
+    event.setMessageReceived(messageEvent);
+
+    // Create signal event node
+    WorkflowNode signalEvent = new WorkflowNode()
+        .id(signalEventId)
+        .eventId(eventNodeId);
+
+    // Create BaseActivity mock with timeout
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity activity =
+        mock(com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class);
+    EventWithTimeout onEvent = new EventWithTimeout();
+    onEvent.setTimeout("PT20M");
+    when(activity.getOn()).thenReturn(onEvent);
+    when(activity.getId()).thenReturn(activityId);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeActivityTimeout",
+        int.class,
+        String.class,
+        Event.class,
+        com.symphony.bdk.workflow.event.WorkflowEventType.class,
+        boolean.class,
+        WorkflowDirectedGraph.class,
+        WorkflowNode.class,
+        com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, 1, eventNodeId, event,
+        com.symphony.bdk.workflow.event.WorkflowEventType.MESSAGE_RECEIVED, false,
+        directGraph, signalEvent, activity);
+
+    // Assert
+    assertThat(signalEvent.getElementType()).isEqualTo(WorkflowNodeType.SIGNAL_EVENT);
+    String timeoutEventId = signalEventId + "_timeout";
+    assertThat(directGraph.isRegistered(timeoutEventId)).isTrue();
+    WorkflowNode timeoutNode = directGraph.readWorkflowNode(timeoutEventId);
+    EventWithTimeout timeoutEvent = (EventWithTimeout) timeoutNode.getEvent();
+    assertThat(timeoutEvent.getTimeout()).isEqualTo("PT20M");
+  }
+
+  @Test
+  void shouldComputeActivityTimeoutWithBothTimeoutsPreferActivity() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String eventNodeId = "message-received_both";
+    String signalEventId = "signal-event-both";
+    String activityId = "activity-both";
+    String parentId = "parent-activity";
+
+    // Register required nodes
+    directGraph.registerToDictionary(parentId,
+        new WorkflowNode().id(parentId).eventId(parentId));
+    directGraph.registerToDictionary(signalEventId,
+        new WorkflowNode().id(signalEventId).eventId(eventNodeId));
+    directGraph.addParent(signalEventId, parentId);
+
+    // Create EventWithTimeout with timeout
+    EventWithTimeout event = new EventWithTimeout();
+    event.setTimeout("PT5M");
+    com.symphony.bdk.workflow.swadl.v1.event.MessageReceivedEvent messageEvent =
+        new com.symphony.bdk.workflow.swadl.v1.event.MessageReceivedEvent();
+    messageEvent.setContent("both");
+    event.setMessageReceived(messageEvent);
+
+    // Create signal event node
+    WorkflowNode signalEvent = new WorkflowNode()
+        .id(signalEventId)
+        .eventId(eventNodeId);
+
+    // Create BaseActivity mock with timeout
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity activity =
+        mock(com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class);
+    EventWithTimeout onEvent = new EventWithTimeout();
+    onEvent.setTimeout("PT30M");
+    when(activity.getOn()).thenReturn(onEvent);
+    when(activity.getId()).thenReturn(activityId);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    when(workflow.getId()).thenReturn("test-workflow");
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeActivityTimeout",
+        int.class,
+        String.class,
+        Event.class,
+        com.symphony.bdk.workflow.event.WorkflowEventType.class,
+        boolean.class,
+        WorkflowDirectedGraph.class,
+        WorkflowNode.class,
+        com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    method.invoke(builder, 1, eventNodeId, event,
+        com.symphony.bdk.workflow.event.WorkflowEventType.MESSAGE_RECEIVED, false,
+        directGraph, signalEvent, activity);
+
+    // Assert
+    assertThat(signalEvent.getElementType()).isEqualTo(WorkflowNodeType.SIGNAL_EVENT);
+    String timeoutEventId = signalEventId + "_timeout";
+    assertThat(directGraph.isRegistered(timeoutEventId)).isTrue();
+    WorkflowNode timeoutNode = directGraph.readWorkflowNode(timeoutEventId);
+    EventWithTimeout timeoutEvent = (EventWithTimeout) timeoutNode.getEvent();
+    assertThat(timeoutEvent.getTimeout()).isEqualTo("PT30M");
+  }
 }
