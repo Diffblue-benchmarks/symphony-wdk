@@ -269,4 +269,51 @@ class CamundaEngineTest {
     verify(auditTrailLogger).undeployed(deployment1);
     verify(auditTrailLogger).undeployed(deployment2);
   }
+
+  @Test
+  void shouldUndeployDeploymentWhenUndeployByDeploymentIdCalled() {
+    // Arrange
+    String deploymentId = "test-deployment-id";
+    String deploymentName = "test-workflow";
+
+    when(deployment1.getId()).thenReturn(deploymentId);
+    when(deployment1.getName()).thenReturn(deploymentName);
+
+    when(repositoryService.createDeploymentQuery()).thenReturn(deploymentQuery);
+    when(deploymentQuery.deploymentId(deploymentId)).thenReturn(deploymentQuery);
+    when(deploymentQuery.singleResult()).thenReturn(deployment1);
+
+    // Act
+    camundaEngine.undeployByDeploymentId(deploymentId);
+
+    // Assert
+    verify(repositoryService).deleteDeployment(deploymentId, true);
+    verify(auditTrailLogger).undeployed(deployment1);
+  }
+
+  @Test
+  void shouldUndeployMultipleDeploymentsWhenUndeployByWorkflowIdCalled() {
+    // Arrange
+    String workflowName = "test-workflow";
+    String deploymentId1 = "deployment-1";
+    String deploymentId2 = "deployment-2";
+
+    when(deployment1.getId()).thenReturn(deploymentId1);
+    when(deployment1.getName()).thenReturn(workflowName);
+    when(deployment2.getId()).thenReturn(deploymentId2);
+    when(deployment2.getName()).thenReturn(workflowName);
+
+    when(repositoryService.createDeploymentQuery()).thenReturn(deploymentQuery);
+    when(deploymentQuery.deploymentName(workflowName)).thenReturn(deploymentQuery);
+    when(deploymentQuery.list()).thenReturn(List.of(deployment1, deployment2));
+
+    // Act
+    camundaEngine.undeployByWorkflowId(workflowName);
+
+    // Assert
+    verify(repositoryService).deleteDeployment(deploymentId1, true);
+    verify(repositoryService).deleteDeployment(deploymentId2, true);
+    verify(auditTrailLogger).undeployed(deployment1);
+    verify(auditTrailLogger).undeployed(deployment2);
+  }
 }
