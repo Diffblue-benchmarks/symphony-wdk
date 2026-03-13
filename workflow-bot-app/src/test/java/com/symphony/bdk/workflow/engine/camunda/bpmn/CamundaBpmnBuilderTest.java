@@ -7,6 +7,8 @@ import com.symphony.bdk.workflow.engine.camunda.bpmn.builder.WorkflowNodeBpmnBui
 import org.camunda.bpm.engine.RepositoryService;
 import org.camunda.bpm.model.bpmn.builder.AbstractFlowNodeBuilder;
 import org.camunda.bpm.model.bpmn.builder.EndEventBuilder;
+import org.camunda.bpm.model.bpmn.builder.EventBasedGatewayBuilder;
+import org.camunda.bpm.model.bpmn.builder.ExclusiveGatewayBuilder;
 import org.camunda.bpm.model.bpmn.builder.SubProcessBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Method;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -92,5 +95,77 @@ class CamundaBpmnBuilderTest {
         AbstractFlowNodeBuilder.class, BuildProcessContext.class);
     leafNodeMethod.setAccessible(true);
     leafNodeMethod.invoke(camundaBpmnBuilder, nodeId, builder, context);
+  }
+
+  @Test
+  void shouldAddExclusiveGatewayWhenActivitiesAndConditional() throws Exception {
+    // Given
+    String nodeId = "test/node";
+    ExclusiveGatewayBuilder exclusiveGatewayBuilder = org.mockito.Mockito.mock(ExclusiveGatewayBuilder.class);
+    when(flowNodeBuilder.exclusiveGateway("testnode_exclusive_gateway")).thenReturn(exclusiveGatewayBuilder);
+
+    // When
+    AbstractFlowNodeBuilder<?, ?> result = invokeAddGateway(nodeId, flowNodeBuilder, true, true, 2);
+
+    // Then
+    verify(flowNodeBuilder).exclusiveGateway("testnode_exclusive_gateway");
+    assertThat(result).isEqualTo(exclusiveGatewayBuilder);
+  }
+
+  @Test
+  void shouldAddEventBasedGatewayWhenNotActivitiesAndConditional() throws Exception {
+    // Given
+    String nodeId = "testNode";
+    EventBasedGatewayBuilder eventGatewayBuilder = org.mockito.Mockito.mock(EventBasedGatewayBuilder.class);
+    when(flowNodeBuilder.eventBasedGateway()).thenReturn(eventGatewayBuilder);
+    when(eventGatewayBuilder.id(nodeId + "_event_gateway")).thenReturn(eventGatewayBuilder);
+
+    // When
+    AbstractFlowNodeBuilder<?, ?> result = invokeAddGateway(nodeId, flowNodeBuilder, false, true, 1);
+
+    // Then
+    verify(flowNodeBuilder).eventBasedGateway();
+    verify(eventGatewayBuilder).id("testNode_event_gateway");
+    assertThat(result).isEqualTo(eventGatewayBuilder);
+  }
+
+  @Test
+  void shouldAddEventBasedGatewayWhenNotActivitiesAndMultipleChildren() throws Exception {
+    // Given
+    String nodeId = "testNode";
+    EventBasedGatewayBuilder eventGatewayBuilder = org.mockito.Mockito.mock(EventBasedGatewayBuilder.class);
+    when(flowNodeBuilder.eventBasedGateway()).thenReturn(eventGatewayBuilder);
+    when(eventGatewayBuilder.id(nodeId + "_event_gateway")).thenReturn(eventGatewayBuilder);
+
+    // When
+    AbstractFlowNodeBuilder<?, ?> result = invokeAddGateway(nodeId, flowNodeBuilder, false, false, 2);
+
+    // Then
+    verify(flowNodeBuilder).eventBasedGateway();
+    verify(eventGatewayBuilder).id("testNode_event_gateway");
+    assertThat(result).isEqualTo(eventGatewayBuilder);
+  }
+
+  @Test
+  void shouldReturnBuilderUnchangedWhenNoGatewayNeeded() throws Exception {
+    // Given
+    String nodeId = "testNode";
+
+    // When
+    AbstractFlowNodeBuilder<?, ?> result = invokeAddGateway(nodeId, flowNodeBuilder, false, false, 1);
+
+    // Then
+    verify(flowNodeBuilder, never()).exclusiveGateway(any());
+    verify(flowNodeBuilder, never()).eventBasedGateway();
+    assertThat(result).isEqualTo(flowNodeBuilder);
+  }
+
+  private AbstractFlowNodeBuilder<?, ?> invokeAddGateway(String nodeId, AbstractFlowNodeBuilder<?, ?> builder,
+      boolean activities, boolean conditional, int childrenSize) throws Exception {
+    Method addGatewayMethod = CamundaBpmnBuilder.class.getDeclaredMethod("addGateway", String.class,
+        AbstractFlowNodeBuilder.class, boolean.class, boolean.class, int.class);
+    addGatewayMethod.setAccessible(true);
+    return (AbstractFlowNodeBuilder<?, ?>) addGatewayMethod.invoke(camundaBpmnBuilder, nodeId, builder, activities,
+        conditional, childrenSize);
   }
 }
