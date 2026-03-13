@@ -6,8 +6,14 @@ import com.symphony.bdk.workflow.engine.ExecutionParameters;
 import com.symphony.bdk.workflow.engine.camunda.bpmn.CamundaBpmnBuilder;
 import com.symphony.bdk.workflow.engine.handler.audit.AuditTrailLogAction;
 import com.symphony.bdk.workflow.event.RealTimeEventProcessor;
+import com.symphony.bdk.workflow.swadl.exception.UniqueIdViolationException;
+import com.symphony.bdk.workflow.swadl.v1.Activity;
+import com.symphony.bdk.workflow.swadl.v1.Workflow;
+import com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity;
 import com.symphony.bdk.workflow.swadl.v1.event.RequestReceivedEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.camunda.bpm.engine.RepositoryService;
+import org.camunda.bpm.model.xml.ModelValidationException;
 import org.camunda.bpm.engine.repository.Deployment;
 import org.camunda.bpm.engine.repository.DeploymentQuery;
 import org.camunda.bpm.engine.repository.ProcessDefinition;
@@ -452,5 +458,102 @@ class CamundaEngineTest {
     verify(requestReceivedEventProcessor).process(eventCaptor.capture());
     RealTimeEvent<RequestReceivedEvent> capturedEvent = eventCaptor.getValue();
     assertThat(capturedEvent.getSource().getWorkflowId()).isEqualTo(workflowId);
+  }
+
+  @Test
+  void shouldTranslateWorkflowSuccessfullyWhenWorkflowIsValid() throws Exception {
+    // Arrange
+    Workflow workflow = createWorkflowWithUniqueActivityIds("test-workflow", "activity1", "activity2");
+    CamundaTranslatedWorkflowContext expectedContext = new CamundaTranslatedWorkflowContext(workflow, null, null);
+
+    when(bpmnBuilder.translateWorkflow(workflow)).thenReturn(expectedContext);
+
+    // Act
+    CamundaTranslatedWorkflowContext result = camundaEngine.translate(workflow);
+
+    // Assert
+    assertThat(result).isEqualTo(expectedContext);
+    verify(bpmnBuilder).translateWorkflow(workflow);
+  }
+
+  @Test
+  void shouldThrowIllegalArgumentExceptionWhenJsonProcessingExceptionOccurs() throws Exception {
+    // Arrange
+    Workflow workflow = createWorkflowWithUniqueActivityIds("test-workflow", "activity1");
+    JsonProcessingException cause = new JsonProcessingException("JSON parsing error") {};
+
+    when(bpmnBuilder.translateWorkflow(workflow)).thenThrow(cause);
+
+    // Act & Assert
+    IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+        IllegalArgumentException.class,
+        () -> camundaEngine.translate(workflow)
+    );
+
+    assertThat(exception.getMessage()).contains("Workflow parsing process failed");
+    assertThat(exception.getMessage()).contains("test-workflow");
+    assertThat(exception.getMessage()).contains("may not be a valid workflow");
+    assertThat(exception.getCause()).isEqualTo(cause);
+  }
+
+  @Test
+  void shouldThrowIllegalArgumentExceptionWhenModelValidationExceptionOccurs() throws Exception {
+    // Arrange
+    Workflow workflow = createWorkflowWithUniqueActivityIds("test-workflow", "activity1");
+    ModelValidationException cause = new ModelValidationException("Model validation error", null);
+
+    when(bpmnBuilder.translateWorkflow(workflow)).thenThrow(cause);
+
+    // Act & Assert
+    IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+        IllegalArgumentException.class,
+        () -> camundaEngine.translate(workflow)
+    );
+
+    assertThat(exception.getMessage()).contains("Workflow parsing process failed");
+    assertThat(exception.getMessage()).contains("test-workflow");
+    assertThat(exception.getMessage()).contains("may not be a valid workflow");
+    assertThat(exception.getCause()).isEqualTo(cause);
+  }
+
+  @Test
+  void shouldThrowUniqueIdViolationExceptionWhenDuplicateActivityIdsExist() {
+    // Arrange
+    Workflow workflow = createWorkflowWithDuplicateActivityIds("test-workflow", "duplicateId", "uniqueId", "duplicateId");
+
+    // Act & Assert
+    org.junit.jupiter.api.Assertions.assertThrows(
+        UniqueIdViolationException.class,
+        () -> camundaEngine.translate(workflow)
+    );
+  }
+
+  private Workflow createWorkflowWithUniqueActivityIds(String workflowId, String... activityIds) {
+    Workflow workflow = new Workflow();
+    workflow.setId(workflowId);
+    workflow.setActivities(createActivities(activityIds));
+    return workflow;
+  }
+
+  private Workflow createWorkflowWithDuplicateActivityIds(String workflowId, String... activityIds) {
+    Workflow workflow = new Workflow();
+    workflow.setId(workflowId);
+    workflow.setActivities(createActivities(activityIds));
+    return workflow;
+  }
+
+  private List<Activity> createActivities(String... activityIds) {
+    return java.util.Arrays.stream(activityIds)
+        .map(id -> {
+          Activity activity = new Activity();
+          BaseActivity baseActivity = new TestBaseActivity();
+          baseActivity.setId(id);
+          activity.setImplementation(baseActivity);
+          return activity;
+        })
+        .collect(java.util.stream.Collectors.toList());
+  }
+
+  static class TestBaseActivity extends BaseActivity {
   }
 }
