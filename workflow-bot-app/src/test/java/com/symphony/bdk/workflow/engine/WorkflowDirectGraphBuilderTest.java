@@ -1516,4 +1516,105 @@ class WorkflowDirectGraphBuilderTest {
     assertThat(registeredNode.getElementType()).isEqualTo(WorkflowNodeType.SIGNAL_EVENT);
     assertThat(registeredNode.getEvent()).isEqualTo(event);
   }
+
+  @Test
+  void shouldCreateJoinGatewayWhenEventsAreParallel() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String activityId = "test-activity";
+
+    // Register activity node
+    directGraph.registerToDictionary(activityId, new WorkflowNode().id(activityId).eventId(activityId));
+
+    // Create Activity with parallel events
+    com.symphony.bdk.workflow.swadl.v1.Activity activity = mock(com.symphony.bdk.workflow.swadl.v1.Activity.class);
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity baseActivity = mock(com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class);
+    com.symphony.bdk.workflow.swadl.v1.activity.RelationalEvents relationalEvents = mock(com.symphony.bdk.workflow.swadl.v1.activity.RelationalEvents.class);
+
+    when(activity.getActivity()).thenReturn(baseActivity);
+    when(baseActivity.getId()).thenReturn(activityId);
+    when(activity.getEvents()).thenReturn(relationalEvents);
+    when(relationalEvents.isParallel()).thenReturn(true);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeParallelJoinGateway",
+        WorkflowDirectedGraph.class,
+        com.symphony.bdk.workflow.swadl.v1.Activity.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    String result = (String) method.invoke(builder, directGraph, activity);
+
+    // Assert
+    String expectedJoinActivityId = activityId + "_join_gateway";
+    assertThat(result).isEqualTo(expectedJoinActivityId);
+
+    assertThat(directGraph.isRegistered(expectedJoinActivityId)).isTrue();
+    WorkflowNode joinNode = directGraph.readWorkflowNode(expectedJoinActivityId);
+    assertThat(joinNode).isNotNull();
+    assertThat(joinNode.getId()).isEqualTo(expectedJoinActivityId);
+    assertThat(joinNode.getEventId()).isEqualTo(expectedJoinActivityId);
+    assertThat(joinNode.getWrappedType()).isEqualTo(JoinGateway.class);
+    assertThat(joinNode.getElementType()).isEqualTo(WorkflowNodeType.JOIN_ACTIVITY);
+
+    assertThat(directGraph.getChildren(expectedJoinActivityId).getChildren()).contains(activityId);
+    assertThat(directGraph.getParents(activityId)).contains(expectedJoinActivityId);
+  }
+
+  @Test
+  void shouldReturnActivityIdWhenEventsAreNotParallel() throws Exception {
+    // Arrange
+    WorkflowDirectedGraph directGraph = new WorkflowDirectedGraph("test-workflow", 1L);
+    String activityId = "test-activity";
+
+    // Register activity node
+    directGraph.registerToDictionary(activityId, new WorkflowNode().id(activityId).eventId(activityId));
+
+    // Create Activity with non-parallel events
+    com.symphony.bdk.workflow.swadl.v1.Activity activity = mock(com.symphony.bdk.workflow.swadl.v1.Activity.class);
+    com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity baseActivity = mock(com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity.class);
+    com.symphony.bdk.workflow.swadl.v1.activity.RelationalEvents relationalEvents = mock(com.symphony.bdk.workflow.swadl.v1.activity.RelationalEvents.class);
+
+    when(activity.getActivity()).thenReturn(baseActivity);
+    when(baseActivity.getId()).thenReturn(activityId);
+    when(activity.getEvents()).thenReturn(relationalEvents);
+    when(relationalEvents.isParallel()).thenReturn(false);
+
+    // Create builder instance with mocked dependencies
+    Workflow workflow = mock(Workflow.class);
+    SessionService sessionService = mock(SessionService.class);
+    UserV2 user = mock(UserV2.class);
+    when(sessionService.getSession()).thenReturn(user);
+    when(user.getDisplayName()).thenReturn("test-user");
+
+    WorkflowDirectGraphBuilder builder = new WorkflowDirectGraphBuilder(workflow, sessionService);
+
+    // Use reflection to access private method
+    Method method = WorkflowDirectGraphBuilder.class.getDeclaredMethod(
+        "computeParallelJoinGateway",
+        WorkflowDirectedGraph.class,
+        com.symphony.bdk.workflow.swadl.v1.Activity.class
+    );
+    method.setAccessible(true);
+
+    // Act
+    String result = (String) method.invoke(builder, directGraph, activity);
+
+    // Assert
+    assertThat(result).isEqualTo(activityId);
+
+    String joinActivityId = activityId + "_join_gateway";
+    assertThat(directGraph.isRegistered(joinActivityId)).isFalse();
+  }
 }
