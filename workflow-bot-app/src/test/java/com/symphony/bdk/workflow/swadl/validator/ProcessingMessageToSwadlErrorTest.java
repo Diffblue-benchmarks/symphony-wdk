@@ -660,4 +660,82 @@ class ProcessingMessageToSwadlErrorTest {
     assertThat(result).isNotNull();
     assertThat(result.getMessage()).isEqualTo("Fallback error message");
   }
+
+  @Test
+  void convert_shouldReturnFallbackErrorWhenExceptionOccurs() {
+    // Arrange
+    JsonNode yamlTree = mapper.createObjectNode();
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    when(processingMessage.asJson()).thenThrow(new RuntimeException("Test exception"));
+    when(processingMessage.getMessage()).thenReturn("Fallback error message");
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getLineNumber()).isEqualTo(-1);
+    assertThat(result.getMessage()).isEqualTo("Fallback error message");
+  }
+
+  @Test
+  void convert_shouldHandleSimpleErrorSuccessfully() {
+    // Arrange
+    JsonNode yamlTree = mapper.createObjectNode();
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/property");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "required");
+    ArrayNode missingArray = mapper.createArrayNode();
+    missingArray.add("field");
+    errorJson.set("missing", missingArray);
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Original message");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.of(100));
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getLineNumber()).isEqualTo(100);
+    assertThat(result.getMessage()).contains("Missing property");
+  }
+
+  @Test
+  void convert_shouldHandleErrorWhenLineNumberNotFound() {
+    // Arrange
+    JsonNode yamlTree = mapper.createObjectNode();
+    YamlJsonPointer yamlJsonPointer = mock(YamlJsonPointer.class);
+
+    ProcessingMessage processingMessage = mock(ProcessingMessage.class);
+    ObjectNode errorJson = mapper.createObjectNode();
+    ObjectNode instanceNode = mapper.createObjectNode();
+    instanceNode.put("pointer", "/property");
+    errorJson.set("instance", instanceNode);
+    errorJson.put("keyword", "type");
+    ArrayNode expectedArray = mapper.createArrayNode();
+    expectedArray.add("string");
+    errorJson.set("expected", expectedArray);
+    errorJson.put("found", "number");
+
+    when(processingMessage.asJson()).thenReturn(errorJson);
+    when(processingMessage.getMessage()).thenReturn("Type mismatch");
+    when(yamlJsonPointer.getLine(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Optional.empty());
+
+    // Act
+    SwadlError result = ProcessingMessageToSwadlError.convert(yamlTree, yamlJsonPointer, processingMessage);
+
+    // Assert
+    assertThat(result).isNotNull();
+    assertThat(result.getLineNumber()).isEqualTo(-1);
+    assertThat(result.getMessage()).contains("Invalid property");
+  }
 }
