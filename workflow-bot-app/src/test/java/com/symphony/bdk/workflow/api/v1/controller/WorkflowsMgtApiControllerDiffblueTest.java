@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.symphony.bdk.workflow.api.v1.WorkflowsMgtApi;
 import com.symphony.bdk.workflow.api.v1.dto.SecretView;
 import com.symphony.bdk.workflow.api.v1.dto.SwadlView;
 import com.symphony.bdk.workflow.api.v1.dto.VersionedWorkflowView;
@@ -1977,6 +1978,65 @@ class WorkflowsMgtApiControllerDiffblueTest {
     assertEquals(HttpStatus.NO_CONTENT, statusCode);
     assertFalse(actualDeleteSecretResult.hasBody());
     assertTrue(actualDeleteSecretResult.getHeaders().isEmpty());
+  }
+
+  /**
+   * Test {@link WorkflowsMgtApi#getSecretMetadata()} via interface reference.
+   *
+   * <p>Method under test: {@link WorkflowsMgtApi#getSecretMetadata()}
+   */
+  @Test
+  @DisplayName("Test getSecretMetadata() via WorkflowsMgtApi interface")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({"ResponseEntity WorkflowsMgtApi.getSecretMetadata()"})
+  void testGetSecretMetadata_viaInterface() {
+    // Arrange
+    SecretRepository repository = mock(SecretRepository.class);
+    when(repository.findAll()).thenReturn(new ArrayList<>());
+    DefaultSecretKeeper secretKeeper = new DefaultSecretKeeper(repository, new SecretCryptVault());
+    RepositoryServiceImpl repositoryService = new RepositoryServiceImpl();
+    CamundaBpmnBuilder bpmnBuilder =
+        new CamundaBpmnBuilder(new RepositoryServiceImpl(), null, null, null);
+    ArrayList<RealTimeEventProcessor<?>> processors = new ArrayList<>();
+
+    CamundaEngine workflowEngine =
+        new CamundaEngine(repositoryService, bpmnBuilder, processors, new AuditTrailLogAction());
+    VersionedWorkflowRepository versionRepository = mock(VersionedWorkflowRepository.class);
+    ArrayList<Converter> converters = new ArrayList<>();
+    Optional<List<BiConverter>> optionalBiConverters = Optional.of(new ArrayList<>());
+
+    DefaultObjectConverter objectConverter =
+        new DefaultObjectConverter(converters, optionalBiConverters);
+
+    WorkflowManagementService workflowManagementService =
+        new WorkflowManagementService(workflowEngine, versionRepository, objectConverter);
+    WorkflowExpirationService workflowExpirationService =
+        new WorkflowExpirationService(
+            mock(WorkflowExpirationJobRepository.class),
+            mock(VersionedWorkflowRepository.class),
+            mock(WorkflowExpirationPlanner.class));
+
+    WorkflowsMgtApi workflowsMgtApi =
+        new WorkflowsMgtApiController(
+            workflowManagementService,
+            workflowExpirationService,
+            new LogsStreamingService(),
+            secretKeeper);
+
+    // Act
+    ResponseEntity<List<SecretMetadata>> actualSecretMetadata =
+        workflowsMgtApi.getSecretMetadata();
+
+    // Assert
+    verify(repository).findAll();
+    HttpStatusCode statusCode = actualSecretMetadata.getStatusCode();
+    assertTrue(statusCode instanceof HttpStatus);
+    assertEquals(200, actualSecretMetadata.getStatusCodeValue());
+    assertEquals(HttpStatus.OK, statusCode);
+    assertTrue(actualSecretMetadata.getBody().isEmpty());
+    assertTrue(actualSecretMetadata.hasBody());
+    assertTrue(actualSecretMetadata.getHeaders().isEmpty());
   }
 
   /**
