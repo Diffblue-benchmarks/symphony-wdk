@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.deser.BeanDeserializerFactory;
 import com.fasterxml.jackson.databind.deser.DefaultDeserializationContext;
 import com.fasterxml.jackson.databind.deser.DefaultDeserializationContext.Impl;
 import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.databind.node.TreeTraversingParser;
 import com.fasterxml.jackson.databind.type.PlaceholderForType;
 import com.fasterxml.jackson.databind.type.ResolvedRecursiveType;
@@ -430,6 +431,74 @@ class EscapedJsonVariableDeserializerDiffblueTest {
     assertEquals(AccessPattern.CONSTANT, actualCreateContextualResult.getNullAccessPattern());
     assertEquals(AccessPattern.DYNAMIC, actualCreateContextualResult.getEmptyAccessPattern());
     assertFalse(actualCreateContextualResult.isCachable());
+  }
+
+  /**
+   * Test {@link EscapedJsonVariableDeserializer#deserialize(JsonParser, DeserializationContext)}
+   * with a textual (escaped JSON) node, exercising the {@code node.isTextual()} branch.
+   *
+   * <p>Method under test: {@link EscapedJsonVariableDeserializer#deserialize(JsonParser,
+   * DeserializationContext)}
+   */
+  @Test
+  @DisplayName("Test deserialize(JsonParser, DeserializationContext) with textual escaped-JSON node")
+  @Tag("ContributionFromDiffblue")
+  void testDeserializeWithPCtxt_textualNode() throws IOException {
+    // Arrange
+    Class<Object> containerType = Object.class;
+    EscapedJsonVariableDeserializer<Object> escapedJsonVariableDeserializer =
+        new EscapedJsonVariableDeserializer<>(containerType);
+    TextNode n = TextNode.valueOf("42.0");
+    TreeTraversingParser p = new TreeTraversingParser(n, CamundaExecutor.OBJECT_MAPPER);
+
+    // Act
+    Object actualDeserializeResult =
+        escapedJsonVariableDeserializer.deserialize(
+            p, new Impl(new BeanDeserializerFactory(new DeserializerFactoryConfig())));
+
+    // Assert
+    assertEquals(42.0d, ((Double) actualDeserializeResult).doubleValue());
+  }
+
+  /**
+   * Test {@link EscapedJsonVariableDeserializer#deserialize(JsonParser, DeserializationContext)}
+   * when {@code containedType} is non-null (set via {@code createContextual}).
+   *
+   * <p>Method under test: {@link EscapedJsonVariableDeserializer#deserialize(JsonParser,
+   * DeserializationContext)}
+   */
+  @Test
+  @DisplayName(
+      "Test deserialize(JsonParser, DeserializationContext) when containedType is non-null")
+  @Tag("ContributionFromDiffblue")
+  void testDeserializeWithPCtxt_withContainedType() throws IOException {
+    // Arrange
+    Class<Object> containerType = Object.class;
+    EscapedJsonVariableDeserializer<Object> escapedJsonVariableDeserializer =
+        new EscapedJsonVariableDeserializer<>(containerType);
+
+    TypeBindings typeBindings = mock(TypeBindings.class);
+    when(typeBindings.getTypeParameters()).thenReturn(new ArrayList<>());
+    JavaType javaType = mock(JavaType.class);
+    when(javaType.getBindings()).thenReturn(typeBindings);
+    Bogus property = mock(Bogus.class);
+    when(property.getType()).thenReturn(javaType);
+
+    EscapedJsonVariableDeserializer<?> deserializerWithContainedType =
+        (EscapedJsonVariableDeserializer<?>)
+            escapedJsonVariableDeserializer.createContextual(
+                new Impl(new BeanDeserializerFactory(new DeserializerFactoryConfig())), property);
+
+    DoubleNode n = DoubleNode.valueOf(99.0d);
+    TreeTraversingParser p = new TreeTraversingParser(n, CamundaExecutor.OBJECT_MAPPER);
+
+    // Act
+    Object actualDeserializeResult =
+        deserializerWithContainedType.deserialize(
+            p, new Impl(new BeanDeserializerFactory(new DeserializerFactoryConfig())));
+
+    // Assert
+    assertEquals(99.0d, ((Double) actualDeserializeResult).doubleValue());
   }
 
   /**
