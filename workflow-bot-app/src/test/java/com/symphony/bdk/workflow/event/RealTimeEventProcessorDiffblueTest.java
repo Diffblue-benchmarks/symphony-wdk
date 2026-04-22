@@ -3,6 +3,7 @@ package com.symphony.bdk.workflow.event;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
+import com.symphony.bdk.spring.events.RealTimeEvent;
 import com.symphony.bdk.workflow.swadl.v1.event.RequestReceivedEvent;
 import org.camunda.bpm.engine.impl.RuntimeServiceImpl;
 import org.junit.jupiter.api.DisplayName;
@@ -32,5 +33,27 @@ class RealTimeEventProcessorDiffblueTest {
     // Assert
     Class<RequestReceivedEvent> expectedSourceTypeResult = RequestReceivedEvent.class;
     assertEquals(expectedSourceTypeResult, actualSourceTypeResult);
+  }
+
+  @Test
+  @DisplayName("Test sourceType() returns correct type parameter")
+  void testSourceType_returnsCorrectType() {
+    // Arrange and Act
+    Class<RequestReceivedEvent> actualSourceTypeResult =
+        new RequestReceivedEventProcessor(new RuntimeServiceImpl()).sourceType();
+
+    // Assert
+    assertEquals(RequestReceivedEvent.class, actualSourceTypeResult);
+  }
+
+  @Test
+  @DisplayName("Test process() dispatches to implementation")
+  void testProcess_dispatchesToImplementation() throws Exception {
+    // Arrange
+    RealTimeEventProcessor<String> processor = event -> { /* no-op implementation */ };
+    RealTimeEvent<String> event = new RealTimeEvent<>(null, "test-source");
+
+    // Act – exercises the abstract process() declaration on the interface
+    processor.process(event);
   }
 }
