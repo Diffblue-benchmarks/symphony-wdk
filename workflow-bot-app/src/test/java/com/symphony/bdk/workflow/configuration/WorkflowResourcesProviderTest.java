@@ -28,6 +28,21 @@ class WorkflowResourcesProviderTest {
   }
 
   @Test
+  void getResourceFile(@TempDir Path tempDir) {
+    WorkflowResourcesProvider provider = new WorkflowResourcesProvider(tempDir.toString());
+
+    // Arrange
+    Path relativePath = Path.of("test.txt");
+
+    // Act
+    File resourceFile = provider.getResourceFile(relativePath);
+
+    // Assert
+    assertThat(resourceFile).isAbsolute();
+    assertThat(resourceFile.getName()).isEqualTo("test.txt");
+  }
+
+  @Test
   void saveResource_getResourceFile(@TempDir Path tempDir) throws IOException {
     WorkflowResourcesProvider provider = new WorkflowResourcesProvider(tempDir.toString());
 
