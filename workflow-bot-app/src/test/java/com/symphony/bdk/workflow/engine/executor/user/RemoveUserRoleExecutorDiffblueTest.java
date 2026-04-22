@@ -5,7 +5,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
+import com.symphony.bdk.core.service.user.UserService;
+import com.symphony.bdk.core.service.user.constant.RoleId;
 import com.symphony.bdk.workflow.engine.executor.ActivityExecutorContext;
+import com.symphony.bdk.workflow.engine.executor.BdkGateway;
 import com.symphony.bdk.workflow.swadl.v1.activity.user.RemoveUserRole;
 import java.util.ArrayList;
 import org.junit.jupiter.api.DisplayName;
@@ -81,5 +84,46 @@ class RemoveUserRoleExecutorDiffblueTest {
 
     // Assert
     verify(context).getActivity();
+  }
+
+  /**
+   * Test {@link RemoveUserRoleExecutor#execute(ActivityExecutorContext)}.
+   *
+   * <ul>
+   *   <li>Given user ID and role; then {@code removeRole} is called on the user service.
+   * </ul>
+   *
+   * <p>Method under test: {@link RemoveUserRoleExecutor#execute(ActivityExecutorContext)}
+   */
+  @Test
+  @DisplayName(
+      "Test execute(ActivityExecutorContext); given userId and role; then calls removeRole on user service")
+  @Tag("ContributionFromDiffblue")
+  @MethodsUnderTest({"void RemoveUserRoleExecutor.execute(ActivityExecutorContext)"})
+  void testExecute_givenUserIdAndRole_thenCallsRemoveRole() {
+    // Arrange
+    ArrayList<Long> userIds = new ArrayList<>();
+    userIds.add(1L);
+
+    ArrayList<String> roles = new ArrayList<>();
+    roles.add("ADMINISTRATOR");
+
+    RemoveUserRole removeUserRole = new RemoveUserRole();
+    removeUserRole.setUserIds(userIds);
+    removeUserRole.setRoles(roles);
+
+    UserService userService = mock(UserService.class);
+    BdkGateway bdkGateway = mock(BdkGateway.class);
+    when(bdkGateway.users()).thenReturn(userService);
+
+    ActivityExecutorContext<RemoveUserRole> context = mock(ActivityExecutorContext.class);
+    when(context.getActivity()).thenReturn(removeUserRole);
+    when(context.bdk()).thenReturn(bdkGateway);
+
+    // Act
+    removeUserRoleExecutor.execute(context);
+
+    // Assert
+    verify(userService).removeRole(1L, RoleId.ADMINISTRATOR);
   }
 }
