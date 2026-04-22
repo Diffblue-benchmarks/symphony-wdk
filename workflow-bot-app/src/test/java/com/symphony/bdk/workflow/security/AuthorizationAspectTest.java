@@ -125,6 +125,23 @@ class AuthorizationAspectTest {
     }
   }
 
+  @org.junit.jupiter.api.Test
+  void test_authorization_unknownHeaderKey_throwsUnauthorized() {
+    WorkflowBotConfiguration workflowBotConfiguration = mock(WorkflowBotConfiguration.class);
+
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+    AuthorizationAspect authorizationAspect = new AuthorizationAspect(workflowBotConfiguration);
+    Authorized authorizedInstance = createAuthorizedInstance("X-Unknown-Token");
+
+    assertThatExceptionOfType(UnauthorizedException.class)
+        .as("Unknown header key should throw UnauthorizedException")
+        .isThrownBy(() -> authorizationAspect.authorizationCheck(authorizedInstance))
+        .satisfies(
+            e -> assertThat(e.getMessage()).isEqualTo(UNAUTHORIZED_EXCEPTION_BAD_TOKEN_MESSAGE));
+  }
+
   private static Authorized createAuthorizedInstance(String header) {
     return new Authorized() {
 
