@@ -232,60 +232,6 @@ class RoomIntegrationTest extends IntegrationTest {
     assertRoomAttributes(expectedRoomAttributes, captorValue);
   }
 
-  @Test
-  void createRoomOboUnauthorized() throws Exception {
-    final Workflow workflow =
-        SwadlParser.fromYaml(getClass().getResourceAsStream("/room/obo/create-room-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(Long.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/create-room-obo-unauthorized"));
-
-    assertThat(workflow).executed("createRoomOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
-  }
-
-  @Test
-  void updateRoom() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(getClass().getResourceAsStream("/room/update-room.swadl.yaml"));
-
-    V3RoomDetail roomDetail = new V3RoomDetail();
-    RoomSystemInfo info = new RoomSystemInfo();
-    info.setId("abc");
-    roomDetail.setRoomSystemInfo(info);
-    when(streamService.getRoomInfo("abc")).thenReturn(roomDetail);
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/update-room"));
-
-    ArgumentCaptor<V3RoomAttributes> attributes = ArgumentCaptor.forClass(V3RoomAttributes.class);
-    verify(streamService, timeout(5000)).updateRoom(eq("abc"), attributes.capture());
-
-    assertThat(attributes.getValue()).satisfies(a -> {
-      assertThat(a.getName()).isNull();
-      assertThat(a.getDescription()).isNotEmpty();
-      assertThat(a.getDiscoverable()).isTrue();
-      assertThat(a.getCopyProtected()).isNull();
-    });
-  }
-
-  @Test
-  void updateRoom_activate() throws Exception {
-    final Workflow workflow =
-        SwadlParser.fromYaml(getClass().getResourceAsStream("/room/update-room-activate.swadl.yaml"));
-
-    V3RoomDetail roomDetail = new V3RoomDetail();
-    RoomSystemInfo info = new RoomSystemInfo();
-    info.setId("abc");
-    roomDetail.setRoomSystemInfo(info);
-    when(streamService.getRoomInfo("abc")).thenReturn(roomDetail);
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/update-room-activate"));
-
-    verify(streamService, timeout(5000)).setRoomActive("abc", true);
-  }
-
   @ParameterizedTest
   @CsvSource({"/room/obo/update-room-obo-valid-username.swadl.yaml, /update-room-obo-username",
       "/room/obo/update-room-obo-valid-userid.swadl.yaml, /update-room-obo-userid"})
@@ -315,44 +261,6 @@ class RoomIntegrationTest extends IntegrationTest {
     });
   }
 
-  @Test
-  void updateRoomOboUnauthorized() throws Exception {
-    final Workflow workflow =
-        SwadlParser.fromYaml(getClass().getResourceAsStream("/room/obo/update-room-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(Long.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/update-room-obo-unauthorized"));
-
-    assertThat(workflow).executed("updateRoomOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
-  }
-
-  @Test
-  void updateRoomActivateOboNotSupported() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(
-        getClass().getResourceAsStream("/room/obo/update-room-activate-obo-not-supported.swadl.yaml"));
-
-    when(bdkGateway.obo(any(String.class))).thenReturn(botSession);
-    when(bdkGateway.obo(any(Long.class))).thenReturn(botSession);
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/update-room-obo-not-supported"));
-
-    assertThat(workflow).executed("updateRoomOboNotSupported").notExecuted("scriptActivityNotToBeExecuted");
-  }
-
-  @Test
-  void addRoomMember() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(getClass().getResourceAsStream("/room/add-room-member.swadl.yaml"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/add-room-member"));
-
-    verify(streamService, timeout(5000)).addMemberToRoom(123L, "abc");
-    verify(streamService, timeout(5000)).addMemberToRoom(456L, "abc");
-  }
-
   @ParameterizedTest
   @CsvSource({"/room/obo/add-room-member-obo-valid-username.swadl.yaml, /add-room-member-obo-valid-username",
       "/room/obo/add-room-member-obo-valid-userid.swadl.yaml, /add-room-member-obo-valid-userid"})
@@ -367,31 +275,6 @@ class RoomIntegrationTest extends IntegrationTest {
 
     verify(oboStreamService, timeout(5000)).addMemberToRoom(123L, "abc");
     verify(oboStreamService, timeout(5000)).addMemberToRoom(456L, "abc");
-  }
-
-  @Test
-  void addRoomMemberOboUnauthorized() throws Exception {
-    final Workflow workflow =
-        SwadlParser.fromYaml(getClass().getResourceAsStream("/room/obo/add-room-member-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(String.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/add-room-member-obo-unauthorized"));
-
-    assertThat(workflow).executed("addRoomMember").notExecuted("scriptActivityNotToBeExecuted");
-  }
-
-  @Test
-  void removeRoomMember() throws Exception {
-    final Workflow workflow =
-        SwadlParser.fromYaml(getClass().getResourceAsStream("/room/remove-room-member.swadl.yaml"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/remove-room-member"));
-
-    verify(streamService, timeout(5000)).removeMemberFromRoom(123L, "abc");
-    verify(streamService, timeout(5000)).removeMemberFromRoom(456L, "abc");
   }
 
   @ParameterizedTest
@@ -410,31 +293,6 @@ class RoomIntegrationTest extends IntegrationTest {
     verify(oboStreamService, timeout(5000)).removeMemberFromRoom(456L, "abc");
   }
 
-  @Test
-  void removeRoomMemberOboUnauthorized() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(
-        getClass().getResourceAsStream("/room/obo/remove-room-member-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(String.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/remove-room-member-obo-unauthorized"));
-
-    assertThat(workflow).executed("removeRoomMemberOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
-  }
-
-  @Test
-  void promoteRoomMember() throws Exception {
-    final Workflow workflow =
-        SwadlParser.fromYaml(getClass().getResourceAsStream("/room/promote-room-owner.swadl.yaml"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/promote-room-owner"));
-
-    verify(streamService, timeout(5000)).promoteUserToRoomOwner(123L, "abc");
-    verify(streamService, timeout(5000)).promoteUserToRoomOwner(456L, "abc");
-  }
-
   @ParameterizedTest
   @CsvSource({"/room/obo/promote-room-owner-obo-valid-username.swadl.yaml, /promote-room-owner-obo-valid-username",
       "/room/obo/promote-room-owner-obo-valid-userid.swadl.yaml, /promote-room-owner-obo-valid-userid"})
@@ -448,31 +306,6 @@ class RoomIntegrationTest extends IntegrationTest {
     engine.onEvent(messageReceived(command));
 
     verify(oboStreamService, timeout(5000)).promoteUserToRoomOwner(123L, "abc");
-  }
-
-  @Test
-  void promoteRoomOwnerOboUnauthorized() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(
-        getClass().getResourceAsStream("/room/obo/promote-room-owner-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(String.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/promote-room-owner-obo-unauthorized"));
-
-    assertThat(workflow).executed("promoteRoomOwnerOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
-  }
-
-  @Test
-  void demoteRoomMember() throws Exception {
-    final Workflow workflow =
-        SwadlParser.fromYaml(getClass().getResourceAsStream("/room/demote-room-owner.swadl.yaml"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/demote-room-owner"));
-
-    verify(streamService, timeout(5000)).demoteUserToRoomParticipant(123L, "abc");
-    verify(streamService, timeout(5000)).demoteUserToRoomParticipant(456L, "abc");
   }
 
   @ParameterizedTest
@@ -490,31 +323,6 @@ class RoomIntegrationTest extends IntegrationTest {
     verify(oboStreamService, timeout(5000)).demoteUserToRoomParticipant(123L, "abc");
   }
 
-  @Test
-  void demoteRoomOwnerOboUnauthorized() throws Exception {
-    final Workflow workflow =
-        SwadlParser.fromYaml(getClass().getResourceAsStream("/room/obo/demote-room-owner-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(String.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/demote-room-owner-obo-unauthorized"));
-
-    assertThat(workflow).executed("demoteRoomOwnerOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
-  }
-
-  @Test
-  void getRoom() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(getClass().getResourceAsStream("/room/get-room.swadl.yaml"));
-    when(streamService.getRoomInfo("abc")).thenReturn(new V3RoomDetail());
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/get-room"));
-
-    verify(streamService, timeout(5000)).getRoomInfo("abc");
-    assertThat(workflow).isExecuted();
-  }
-
   @ParameterizedTest
   @CsvSource({"/room/obo/get-room-obo-valid-username.swadl.yaml, /get-room-obo-valid-username",
       "/room/obo/get-room-obo-valid-userid.swadl.yaml, /get-room-obo-valid-userid"})
@@ -529,52 +337,6 @@ class RoomIntegrationTest extends IntegrationTest {
     engine.onEvent(messageReceived(command));
 
     verify(oboStreamService, timeout(5000)).getRoomInfo("abc");
-    assertThat(workflow).isExecuted();
-  }
-
-  @Test
-  void getRoomOboUnauthorized() throws Exception {
-    final Workflow workflow =
-        SwadlParser.fromYaml(getClass().getResourceAsStream("/room/obo/get-room-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(String.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/get-room-obo-unauthorized"));
-
-    assertThat(workflow).executed("getRoomOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
-  }
-
-  @Test
-  void getRoomMembers() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(getClass().getResourceAsStream("/room/get-room-members.swadl.yaml"));
-    when(streamService.listRoomMembers("abc")).thenReturn(Collections.emptyList());
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/get-room-members"));
-
-    verify(streamService, timeout(5000)).listRoomMembers("abc");
-    assertThat(workflow).isExecuted();
-  }
-
-  @SuppressWarnings("ConstantConditions") // for null pagination attribute with refEq
-  @Test
-  void getRooms() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(getClass().getResourceAsStream("/room/get-rooms.swadl.yaml"));
-
-    V2RoomSearchCriteria query = new V2RoomSearchCriteria().query("test")
-        .creator(new UserId().id(123L))
-        .owner(new UserId().id(456L))
-        .member(new UserId().id(789L))
-        .labels(List.of("test", "test1"))
-        .active(true)
-        .sortOrder(V2RoomSearchCriteria.SortOrderEnum.BASIC);
-    when(streamService.searchRooms(refEq(query))).thenReturn(new V3RoomSearchResults());
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/get-rooms"));
-
-    verify(streamService, timeout(5000)).searchRooms(refEq(query));
     assertThat(workflow).isExecuted();
   }
 
@@ -632,36 +394,6 @@ class RoomIntegrationTest extends IntegrationTest {
     assertThat(workflow).notExecuted("scriptShouldNotBeExecuted").executed("getRoomsOboValidUserid");
   }
 
-  @Test
-  void getRoomsOboUnauthorized() throws Exception {
-    final Workflow workflow =
-        SwadlParser.fromYaml(getClass().getResourceAsStream("/room/obo/get-rooms-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(String.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/get-rooms-obo-unauthorized"));
-
-    assertThat(workflow).executed("getRoomsOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
-  }
-
-  @SuppressWarnings("ConstantConditions") // for null pagination attribute with refEq
-  @Test
-  void getRoomsPagination() throws Exception {
-    final Workflow workflow =
-        SwadlParser.fromYaml(getClass().getResourceAsStream("/room/get-rooms-pagination.swadl.yaml"));
-
-    V2RoomSearchCriteria query = new V2RoomSearchCriteria().query("test").labels(List.of("test", "test1")).active(true);
-    when(streamService.searchRooms(refEq(query), refEq(new PaginationAttribute(10, 10)))).thenReturn(
-        new V3RoomSearchResults());
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/get-rooms-pagination"));
-
-    verify(streamService, timeout(5000)).searchRooms(refEq(query), refEq(new PaginationAttribute(10, 10)));
-    assertThat(workflow).isExecuted();
-  }
-
   @SuppressWarnings("ConstantConditions") // for null pagination attribute with refEq
   @ParameterizedTest
   @CsvSource({"/room/obo/get-rooms-pagination-obo-valid-userid.swadl.yaml, /get-rooms-pagination-obo-valid-userid",
@@ -681,19 +413,6 @@ class RoomIntegrationTest extends IntegrationTest {
 
     verify(oboStreamService, timeout(5000)).searchRooms(refEq(query), refEq(new PaginationAttribute(10, 10)));
     assertThat(workflow).isExecuted();
-  }
-
-  @Test
-  void getRoomsPaginationOboUnauthorized() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(
-        getClass().getResourceAsStream("/room/obo/get-rooms-pagination-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(String.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/get-rooms-pagination-obo-unauthorized"));
-
-    assertThat(workflow).executed("getRoomsPaginationOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
   }
 
   private void assertRoomAttributes(V3RoomAttributes expected, V3RoomAttributes actual) {

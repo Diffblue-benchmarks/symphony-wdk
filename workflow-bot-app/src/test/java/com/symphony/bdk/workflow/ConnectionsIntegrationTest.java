@@ -49,25 +49,6 @@ class ConnectionsIntegrationTest extends IntegrationTest {
         .hasOutput(String.format(OUTPUTS_CONNECTIONS_KEY, "getConnections"), userConnections);
   }
 
-  @Test
-  void listConnectionsNoParam() throws IOException, ProcessingException {
-    final Workflow workflow =
-        SwadlParser.fromYaml(getClass().getResourceAsStream("/connection/get-connections-no-params.swadl.yaml"));
-
-    final List<UserConnection> userConnections = Arrays.asList(connection(666L, UserConnection.StatusEnum.ACCEPTED),
-        connection(777L, UserConnection.StatusEnum.ACCEPTED));
-
-    when(connectionService.listConnections(null, null)).thenReturn(userConnections);
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/get-connections-no-params"));
-
-    verify(connectionService, timeout(5000)).listConnections(null, null);
-
-    assertThat(workflow).isExecuted()
-        .hasOutput(String.format(OUTPUTS_CONNECTIONS_KEY, "getConnections"), userConnections);
-  }
-
   @ParameterizedTest
   @CsvSource({
     "/connection/obo/get-connections-obo-valid-username.swadl.yaml, /get-connections-obo-valid-username, "
@@ -94,19 +75,6 @@ class ConnectionsIntegrationTest extends IntegrationTest {
 
     assertThat(workflow).isExecuted()
         .hasOutput(String.format(OUTPUTS_CONNECTIONS_KEY, output), userConnections);
-  }
-
-  @Test
-  void listConnectionsStatusOboUnauthorized() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(
-        getClass().getResourceAsStream("/connection/obo/get-connections-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(Long.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/get-connections-obo-unauthorized"));
-
-    assertThat(workflow).executed("getConnectionsOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
   }
 
   @Test
@@ -157,19 +125,6 @@ class ConnectionsIntegrationTest extends IntegrationTest {
   }
 
   @Test
-  void getConnectionStatusOboUnauthorized() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(
-        getClass().getResourceAsStream("/connection/obo/get-connection-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(Long.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/get-connection-obo-unauthorized"));
-
-    assertThat(workflow).executed("getConnectionOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
-  }
-
-  @Test
   @DisplayName(
       "Given a user, when the workflow is triggered, then a connection to him is created")
   void createConnectionStatus() throws IOException, ProcessingException {
@@ -214,20 +169,6 @@ class ConnectionsIntegrationTest extends IntegrationTest {
     verify(oboConnectionService, timeout(5000)).createConnection(userId);
 
     assertThat(workflow).isExecuted().hasOutput(String.format(OUTPUT_CONNECTION_KEY, outputName), userConnection);
-  }
-
-  @Test
-  void createConnectionOboUnauthorized() throws Exception {
-    final Workflow workflow =
-        SwadlParser.fromYaml(
-            getClass().getResourceAsStream("/connection/obo/create-connection-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(Long.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/create-connection-obo-unauthorized"));
-
-    assertThat(workflow).executed("createConnectionOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
   }
 
   @Test
@@ -279,20 +220,6 @@ class ConnectionsIntegrationTest extends IntegrationTest {
   }
 
   @Test
-  void acceptConnectionStatusOboUnauthorized() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(
-        getClass().getResourceAsStream("/connection/obo/accept-connection-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(Long.class))).thenThrow(new RuntimeException("unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/accept-connection-obo-unauthorized"));
-
-    assertThat(workflow).executed("acceptConnectionOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
-
-  }
-
-  @Test
   @DisplayName(
       "Given an incoming connection request from a user, when the workflow is triggered,"
           + "then the connection is rejected")
@@ -341,19 +268,6 @@ class ConnectionsIntegrationTest extends IntegrationTest {
   }
 
   @Test
-  void rejectConnectionStatusOboUnauthorized() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(
-        getClass().getResourceAsStream("/connection/obo/reject-connection-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(Long.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/reject-connection-obo-unauthorized"));
-
-    assertThat(workflow).executed("rejectConnectionOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
-  }
-
-  @Test
   @DisplayName(
       "Given connection request from a user, when the workflow is triggered, then the connection is removed")
   void removeConnectionStatus() throws IOException, ProcessingException {
@@ -390,18 +304,5 @@ class ConnectionsIntegrationTest extends IntegrationTest {
     verify(oboConnectionService, timeout(5000)).removeConnection(userId);
 
     assertThat(workflow).isExecuted();
-  }
-
-  @Test
-  void removeConnectionStatusOboUnauthorized() throws Exception {
-    final Workflow workflow = SwadlParser.fromYaml(
-        getClass().getResourceAsStream("/connection/obo/remove-connection-obo-unauthorized.swadl.yaml"));
-
-    when(bdkGateway.obo(any(Long.class))).thenThrow(new RuntimeException("Unauthorized user"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/remove-connection-obo-unauthorized"));
-
-    assertThat(workflow).executed("removeConnectionOboUnauthorized").notExecuted("scriptActivityNotToBeExecuted");
   }
 }

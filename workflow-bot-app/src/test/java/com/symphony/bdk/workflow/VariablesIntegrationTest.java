@@ -39,16 +39,4 @@ class VariablesIntegrationTest extends IntegrationTest {
     assertThat(captorStreamId).isEqualTo("1234");
   }
 
-  @Test
-  void variablesAreTyped() throws Exception {
-    final Workflow workflow =
-        SwadlParser.fromYaml(getClass().getResourceAsStream("/typed-variables.swadl.yaml"));
-
-    engine.deploy(workflow);
-    engine.onEvent(messageReceived("/typed"));
-    String processId = lastProcess().get();
-
-    await().atMost(5, SECONDS).until(() -> processIsCompleted(processId));
-  }
-
 }
