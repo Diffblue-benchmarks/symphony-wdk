@@ -8,12 +8,14 @@ import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
 import com.symphony.bdk.core.auth.impl.ExtensionAppAuthenticatorCertImpl;
 import com.symphony.bdk.core.config.model.BdkRetryConfig;
+import com.symphony.bdk.workflow.management.WorkflowManagementService;
 import com.symphony.devsol.client.ExtAppClient;
 import java.util.Collection;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -67,6 +69,58 @@ class FilterConfigDiffblueTest {
     assertTrue(actualAuthFilterRegistrationResult.isAsyncSupported());
     assertTrue(actualAuthFilterRegistrationResult.isEnabled());
     assertEquals(Integer.MIN_VALUE, actualAuthFilterRegistrationResult.getOrder());
+    assertSame(filter, filter2);
+  }
+
+  /**
+   * Test {@link FilterConfig#accessFilterRegistration(AccessFilter)}.
+   *
+   * <ul>
+   *   <li>Then Filter return {@link AccessFilter}.
+   * </ul>
+   *
+   * <p>Method under test: {@link FilterConfig#accessFilterRegistration(AccessFilter)}
+   */
+  @Test
+  @DisplayName("Test accessFilterRegistration(AccessFilter); then Filter return AccessFilter")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({"FilterRegistrationBean FilterConfig.accessFilterRegistration(AccessFilter)"})
+  void testAccessFilterRegistration_thenFilterReturnAccessFilter() {
+    //   Diffblue Cover was unable to create a Spring-specific test for this Spring method.
+    //   Run dcover create --keep-partial-tests to gain insights into why
+    //   a non-Spring test was created.
+
+    // Arrange
+    FilterConfig filterConfig = new FilterConfig();
+    WorkflowManagementService managementService = Mockito.mock(WorkflowManagementService.class);
+    AccessFilter filter = new AccessFilter(managementService);
+
+    // Act
+    FilterRegistrationBean<OncePerRequestFilter> actualAccessFilterRegistrationResult =
+        filterConfig.accessFilterRegistration(filter);
+
+    // Assert
+    OncePerRequestFilter filter2 = actualAccessFilterRegistrationResult.getFilter();
+    assertTrue(filter2 instanceof AccessFilter);
+    Collection<String> servletNames = actualAccessFilterRegistrationResult.getServletNames();
+    assertTrue(servletNames instanceof Set);
+    Collection<ServletRegistrationBean<?>> servletRegistrationBeans =
+        actualAccessFilterRegistrationResult.getServletRegistrationBeans();
+    assertTrue(servletRegistrationBeans instanceof Set);
+    Collection<String> urlPatterns = actualAccessFilterRegistrationResult.getUrlPatterns();
+    assertEquals(2, urlPatterns.size());
+    assertTrue(urlPatterns instanceof Set);
+    assertEquals("accessFilter", actualAccessFilterRegistrationResult.getFilterName());
+    assertFalse(actualAccessFilterRegistrationResult.isMatchAfter());
+    assertTrue(urlPatterns.contains("/v1/workflows"));
+    assertTrue(urlPatterns.contains("/v1/workflows/*"));
+    assertTrue(servletNames.isEmpty());
+    assertTrue(servletRegistrationBeans.isEmpty());
+    assertTrue(actualAccessFilterRegistrationResult.getInitParameters().isEmpty());
+    assertTrue(actualAccessFilterRegistrationResult.isAsyncSupported());
+    assertTrue(actualAccessFilterRegistrationResult.isEnabled());
+    assertEquals(Integer.MIN_VALUE + 1, actualAccessFilterRegistrationResult.getOrder());
     assertSame(filter, filter2);
   }
 

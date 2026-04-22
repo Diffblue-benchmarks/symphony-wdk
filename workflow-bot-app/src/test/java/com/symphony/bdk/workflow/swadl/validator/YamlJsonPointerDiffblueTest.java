@@ -2,6 +2,7 @@ package com.symphony.bdk.workflow.swadl.validator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -176,5 +177,127 @@ class YamlJsonPointerDiffblueTest {
 
     // Act and Assert
     assertFalse(yamlJsonPointer.getLine(JsonPointer.empty()).isPresent());
+  }
+
+  /**
+   * Test {@link YamlJsonPointer#getLine(JsonPointer)}.
+   *
+   * <ul>
+   *   <li>Given YAML mapping node.
+   *   <li>When pointer matches a key.
+   *   <li>Then return the line number of that key.
+   * </ul>
+   *
+   * <p>Method under test: {@link YamlJsonPointer#getLine(JsonPointer)}
+   */
+  @Test
+  @DisplayName("Test getLine(JsonPointer); given mapping YAML; when pointer matches key; then return line number")
+  void testGetLine_givenMappingYaml_whenPointerMatchesKey_thenReturnLineNumber() {
+    // Arrange
+    YamlJsonPointer yamlJsonPointer = new YamlJsonPointer(new StringReader("foo: bar\n"));
+
+    // Act
+    Optional<Integer> result = yamlJsonPointer.getLine(JsonPointer.compile("/foo"));
+
+    // Assert
+    assertTrue(result.isPresent());
+    assertEquals(1, result.get());
+  }
+
+  /**
+   * Test {@link YamlJsonPointer#getLine(JsonPointer)}.
+   *
+   * <ul>
+   *   <li>Given YAML mapping node.
+   *   <li>When pointer does not match any key.
+   *   <li>Then return empty.
+   * </ul>
+   *
+   * <p>Method under test: {@link YamlJsonPointer#getLine(JsonPointer)}
+   */
+  @Test
+  @DisplayName("Test getLine(JsonPointer); given mapping YAML; when pointer does not match key; then return empty")
+  void testGetLine_givenMappingYaml_whenPointerDoesNotMatchKey_thenReturnEmpty() {
+    // Arrange
+    YamlJsonPointer yamlJsonPointer = new YamlJsonPointer(new StringReader("foo: bar\n"));
+
+    // Act
+    Optional<Integer> result = yamlJsonPointer.getLine(JsonPointer.compile("/other"));
+
+    // Assert
+    assertFalse(result.isPresent());
+  }
+
+  /**
+   * Test {@link YamlJsonPointer#getLine(JsonPointer)}.
+   *
+   * <ul>
+   *   <li>Given YAML sequence node.
+   *   <li>When pointer matches index 0.
+   *   <li>Then return line number of that element.
+   * </ul>
+   *
+   * <p>Method under test: {@link YamlJsonPointer#getLine(JsonPointer)}
+   */
+  @Test
+  @DisplayName("Test getLine(JsonPointer); given sequence YAML; when pointer matches index; then return line number")
+  void testGetLine_givenSequenceYaml_whenPointerMatchesIndex_thenReturnLineNumber() {
+    // Arrange
+    YamlJsonPointer yamlJsonPointer = new YamlJsonPointer(new StringReader("- item1\n- item2\n"));
+
+    // Act
+    Optional<Integer> result = yamlJsonPointer.getLine(JsonPointer.compile("/0"));
+
+    // Assert
+    assertTrue(result.isPresent());
+    assertEquals(1, result.get());
+  }
+
+  /**
+   * Test {@link YamlJsonPointer#getLine(JsonPointer)}.
+   *
+   * <ul>
+   *   <li>Given YAML sequence node.
+   *   <li>When pointer index is out of range.
+   *   <li>Then return empty.
+   * </ul>
+   *
+   * <p>Method under test: {@link YamlJsonPointer#getLine(JsonPointer)}
+   */
+  @Test
+  @DisplayName("Test getLine(JsonPointer); given sequence YAML; when pointer index out of range; then return empty")
+  void testGetLine_givenSequenceYaml_whenPointerIndexOutOfRange_thenReturnEmpty() {
+    // Arrange
+    YamlJsonPointer yamlJsonPointer = new YamlJsonPointer(new StringReader("- item1\n"));
+
+    // Act
+    Optional<Integer> result = yamlJsonPointer.getLine(JsonPointer.compile("/5"));
+
+    // Assert
+    assertFalse(result.isPresent());
+  }
+
+  /**
+   * Test {@link YamlJsonPointer#getLine(JsonPointer)}.
+   *
+   * <ul>
+   *   <li>Given YAML scalar node.
+   *   <li>When pointer has non-null tail.
+   *   <li>Then return empty (scalar cannot be navigated into).
+   * </ul>
+   *
+   * <p>Method under test: {@link YamlJsonPointer#getLine(JsonPointer)}
+   */
+  @Test
+  @DisplayName("Test getLine(JsonPointer); given scalar YAML; when pointer has non-null tail; then return empty")
+  void testGetLine_givenScalarYaml_whenPointerHasNonNullTail_thenReturnEmpty() {
+    // Arrange
+    YamlJsonPointer yamlJsonPointer = new YamlJsonPointer(new StringReader("scalarValue\n"));
+
+    // Act
+    Optional<Integer> result = yamlJsonPointer.getLine(JsonPointer.compile("/foo"));
+
+    // Assert
+    assertFalse(result.isPresent());
   }
 }
