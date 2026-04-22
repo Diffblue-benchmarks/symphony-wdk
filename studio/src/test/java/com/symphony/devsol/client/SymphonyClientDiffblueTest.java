@@ -7,6 +7,7 @@ import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.symphony.bdk.app.spring.exception.GlobalControllerExceptionHandler;
+import com.symphony.bdk.core.auth.jwt.UserClaim;
 import com.symphony.bdk.core.service.session.SessionService;
 import com.symphony.bdk.core.service.user.UserService;
 import com.symphony.bdk.gen.api.model.UserSearchQuery;
@@ -42,6 +43,39 @@ class SymphonyClientDiffblueTest {
   @Autowired private SymphonyClient symphonyClient;
 
   @MockBean private UserService userService;
+
+  /**
+   * Test {@link SymphonyClient#getProfile(UserClaim)}.
+   *
+   * <ul>
+   *   <li>Given {@link UserClaim} (default constructor) id {@code 1}.
+   *   <li>Then content string {@code {"admin":false}}.
+   * </ul>
+   *
+   * <p>Method under test: {@link SymphonyClient#getProfile(UserClaim)}
+   */
+  @Test
+  @DisplayName("Test getProfile(UserClaim); given UserClaim id '1'; then content string '{\"admin\":false}'")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({"com.symphony.devsol.model.wdk.Profile SymphonyClient.getProfile(UserClaim)"})
+  void testGetProfile_givenUserClaimId1_thenContentStringAdminFalse() throws Exception {
+    // Arrange
+    UserClaim userClaim = new UserClaim();
+    userClaim.setId(1L);
+
+    MockHttpServletRequestBuilder requestBuilder =
+        MockMvcRequestBuilders.get("/symphony/profile").requestAttr("user", userClaim);
+
+    // Act and Assert
+    MockMvcBuilders.standaloneSetup(symphonyClient)
+        .setControllerAdvice(globalControllerExceptionHandler)
+        .build()
+        .perform(requestBuilder)
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json"))
+        .andExpect(content().string("{\"admin\":false}"));
+  }
 
   /**
    * Test {@link SymphonyClient#getAppId()}.
