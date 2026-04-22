@@ -7,9 +7,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
+import com.symphony.bdk.core.OboServices;
+import com.symphony.bdk.core.auth.AuthSession;
 import com.symphony.bdk.core.auth.AuthenticatorFactory;
 import com.symphony.bdk.core.config.model.BdkConfig;
 import com.symphony.bdk.core.service.connection.ConnectionService;
+import com.symphony.bdk.core.service.connection.OboConnectionService;
 import com.symphony.bdk.core.service.message.MessageService;
 import com.symphony.bdk.core.service.session.SessionService;
 import com.symphony.bdk.core.service.stream.StreamService;
@@ -17,6 +20,8 @@ import com.symphony.bdk.core.service.user.UserService;
 import com.symphony.bdk.ext.group.SymphonyGroupService;
 import com.symphony.bdk.workflow.engine.SpringBdkGateway;
 import com.symphony.bdk.workflow.engine.executor.ActivityExecutorContext;
+import com.symphony.bdk.workflow.engine.executor.BdkGateway;
+import com.symphony.bdk.workflow.swadl.v1.activity.Obo;
 import com.symphony.bdk.workflow.swadl.v1.activity.connection.RemoveConnection;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -123,5 +128,48 @@ class RemoveConnectionExecutorDiffblueTest {
     assertThrows(
         IllegalArgumentException.class, () -> removeConnectionExecutor.doOboWithCache(execution));
     verify(execution).getActivity();
+  }
+
+  /**
+   * Test {@link RemoveConnectionExecutor#doOboWithCache(ActivityExecutorContext)}.
+   *
+   * <ul>
+   *   <li>Then calls {@link OboConnectionService#removeConnection(long)}.
+   * </ul>
+   *
+   * <p>Method under test: {@link RemoveConnectionExecutor#doOboWithCache(ActivityExecutorContext)}
+   */
+  @Test
+  @DisplayName("Test doOboWithCache(ActivityExecutorContext); then calls obo removeConnection")
+  @MethodsUnderTest({"java.lang.Void RemoveConnectionExecutor.doOboWithCache(ActivityExecutorContext)"})
+  void testDoOboWithCache_thenCallsOboRemoveConnection() throws Exception {
+    // Arrange
+    Obo obo = new Obo();
+    obo.setUsername("testUser");
+
+    RemoveConnection activity = new RemoveConnection();
+    activity.setUserId("123");
+    activity.setObo(obo);
+
+    AuthSession authSession = mock(AuthSession.class);
+    OboConnectionService oboConnectionService = mock(OboConnectionService.class);
+    doNothing().when(oboConnectionService).removeConnection(123L);
+
+    OboServices oboServices = mock(OboServices.class);
+    when(oboServices.connections()).thenReturn(oboConnectionService);
+
+    BdkGateway bdkGateway = mock(BdkGateway.class);
+    when(bdkGateway.obo("testUser")).thenReturn(authSession);
+    when(bdkGateway.obo(authSession)).thenReturn(oboServices);
+
+    ActivityExecutorContext<RemoveConnection> execution = mock(ActivityExecutorContext.class);
+    when(execution.bdk()).thenReturn(bdkGateway);
+    when(execution.getActivity()).thenReturn(activity);
+
+    // Act
+    removeConnectionExecutor.doOboWithCache(execution);
+
+    // Assert
+    verify(oboConnectionService).removeConnection(123L);
   }
 }
