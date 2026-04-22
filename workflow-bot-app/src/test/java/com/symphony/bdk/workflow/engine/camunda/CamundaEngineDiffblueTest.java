@@ -1,11 +1,14 @@
 package com.symphony.bdk.workflow.engine.camunda;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -28,12 +31,18 @@ import com.symphony.bdk.workflow.engine.camunda.bpmn.CamundaBpmnBuilder;
 import com.symphony.bdk.workflow.engine.camunda.bpmn.builder.WorkflowNodeBpmnBuilderRegistry;
 import com.symphony.bdk.workflow.engine.handler.audit.AuditTrailLogAction;
 import com.symphony.bdk.workflow.event.RealTimeEventProcessor;
+import com.symphony.bdk.workflow.exception.NotFoundException;
+import com.symphony.bdk.workflow.exception.UnauthorizedException;
 import com.symphony.bdk.workflow.management.repository.VersionedWorkflowRepository;
+import com.symphony.bdk.workflow.swadl.exception.UniqueIdViolationException;
 import com.symphony.bdk.workflow.swadl.v1.Activity;
 import com.symphony.bdk.workflow.swadl.v1.Properties;
 import com.symphony.bdk.workflow.swadl.v1.Workflow;
 import com.symphony.bdk.workflow.swadl.v1.activity.Debug;
+import com.symphony.bdk.workflow.swadl.v1.event.RequestReceivedEvent;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +52,9 @@ import org.camunda.bpm.engine.impl.DeploymentQueryImpl;
 import org.camunda.bpm.engine.impl.RepositoryServiceImpl;
 import org.camunda.bpm.engine.impl.persistence.entity.DeploymentEntity;
 import org.camunda.bpm.engine.repository.Deployment;
+import org.camunda.bpm.engine.repository.ProcessDefinition;
+import org.camunda.bpm.engine.repository.ProcessDefinitionQuery;
+import org.camunda.bpm.engine.repository.Resource;
 import org.camunda.bpm.model.bpmn.impl.BpmnModelInstanceImpl;
 import org.camunda.bpm.model.xml.ModelValidationException;
 import org.camunda.bpm.model.xml.impl.ModelBuilderImpl;
@@ -967,5 +979,289 @@ class CamundaEngineDiffblueTest {
 
     // Assert
     verify(event, atLeast(1)).getSource();
+  }
+
+  /**
+   * Test {@link CamundaEngine#CamundaEngine(RepositoryService, CamundaBpmnBuilder, List, AuditTrailLogAction)}.
+   *
+   * <p>Method under test: constructor</p>
+   */
+  @Test
+  @DisplayName("Test CamundaEngine constructor with processors; builds processor registry")
+  void testConstructor_withProcessors() {
+    // Arrange
+    @SuppressWarnings("unchecked")
+    RealTimeEventProcessor<RequestReceivedEvent> processor = mock(RealTimeEventProcessor.class);
+    when(processor.sourceType()).thenReturn(RequestReceivedEvent.class);
+
+    List<RealTimeEventProcessor<?>> processors = new ArrayList<>();
+    processors.add(processor);
+
+    RepositoryServiceImpl repositoryService = new RepositoryServiceImpl();
+
+    // Act
+    CamundaEngine engine =
+        new CamundaEngine(repositoryService, camundaBpmnBuilder, processors, auditTrailLogAction);
+
+    // Assert
+    assertNotNull(engine);
+    verify(processor).sourceType();
+  }
+
+  /**
+   * Test {@link CamundaEngine#deploy(CamundaTranslatedWorkflowContext)}.
+   *
+   * <p>Method under test: {@link CamundaEngine#deploy(CamundaTranslatedWorkflowContext)}</p>
+   */
+  @Test
+  @DisplayName("Test deploy(CamundaTranslatedWorkflowContext); returns deployment id")
+  void testDeployWithContext() {
+    // Arrange
+    Properties properties = new Properties();
+    properties.setPublish(true);
+
+    Workflow workflow = new Workflow();
+    workflow.setActivities(new ArrayList<>());
+    workflow.setId("42");
+    workflow.setProperties(properties);
+    workflow.setVariables(new HashMap<>());
+    workflow.setVersion(1L);
+
+    WorkflowDirectedGraph workflowDirectedGraph = new WorkflowDirectedGraph("42");
+    ModelImpl model = new ModelImpl("Model Name");
+    ModelBuilderImpl modelBuilder = new ModelBuilderImpl("Model Name");
+    BpmnModelInstanceImpl instance =
+        new BpmnModelInstanceImpl(model, modelBuilder, new DomDocumentImpl(null));
+
+    CamundaTranslatedWorkflowContext context =
+        new CamundaTranslatedWorkflowContext(workflow, workflowDirectedGraph, instance);
+
+    DeploymentEntity deploymentEntity = mock(DeploymentEntity.class);
+    when(deploymentEntity.getId()).thenReturn("deploy-1");
+    when(deploymentEntity.getName()).thenReturn("workflow-1");
+    when(camundaBpmnBuilder.deployWorkflow(any(CamundaTranslatedWorkflowContext.class)))
+        .thenReturn(deploymentEntity);
+    doNothing().when(auditTrailLogAction).deployed(any(Deployment.class));
+
+    // Act
+    String result = camundaEngine.deploy(context);
+
+    // Assert
+    verify(camundaBpmnBuilder).deployWorkflow(isA(CamundaTranslatedWorkflowContext.class));
+    verify(auditTrailLogAction).deployed(isA(Deployment.class));
+    assertEquals("deploy-1", result);
+  }
+
+  /**
+   * Test {@link CamundaEngine#execute(String, ExecutionParameters)}.
+   *
+   * <ul>
+   *   <li>Then throw {@link NotFoundException} when no matching workflow is found.
+   * </ul>
+   *
+   * <p>Method under test: {@link CamundaEngine#execute(String, ExecutionParameters)}</p>
+   */
+  @Test
+  @DisplayName("Test execute(String, ExecutionParameters); then throw NotFoundException when no workflow")
+  void testExecute_thenThrowNotFoundException() {
+    // Arrange
+    ProcessDefinitionQuery query = mock(ProcessDefinitionQuery.class);
+    when(query.active()).thenReturn(query);
+    when(query.list()).thenReturn(new ArrayList<>());
+    when(repositoryService.createProcessDefinitionQuery()).thenReturn(query);
+
+    // Act and Assert
+    assertThrows(
+        NotFoundException.class,
+        () -> camundaEngine.execute("nonexistent-workflow", new ExecutionParameters(new HashMap<>(), "")));
+    verify(repositoryService).createProcessDefinitionQuery();
+  }
+
+  /**
+   * Test {@link CamundaEngine#execute(String, ExecutionParameters)}.
+   *
+   * <ul>
+   *   <li>Then throw {@link UnauthorizedException} when token does not match.
+   * </ul>
+   *
+   * <p>Method under test: {@link CamundaEngine#execute(String, ExecutionParameters)}</p>
+   */
+  @Test
+  @DisplayName("Test execute(String, ExecutionParameters); then throw UnauthorizedException on token mismatch")
+  void testExecute_thenThrowUnauthorizedException() {
+    // Arrange
+    ProcessDefinition processDefinition = mock(ProcessDefinition.class);
+    when(processDefinition.getName()).thenReturn("myWorkflow");
+    when(processDefinition.getDeploymentId()).thenReturn("dep-1");
+
+    ProcessDefinitionQuery query = mock(ProcessDefinitionQuery.class);
+    when(query.active()).thenReturn(query);
+    when(query.list()).thenReturn(Collections.singletonList(processDefinition));
+    when(repositoryService.createProcessDefinitionQuery()).thenReturn(query);
+
+    Resource tokenResource = mock(Resource.class);
+    when(tokenResource.getName()).thenReturn(CamundaBpmnBuilder.DEPLOYMENT_RESOURCE_TOKEN_KEY);
+    when(tokenResource.getBytes()).thenReturn("secret-token".getBytes(StandardCharsets.UTF_8));
+    when(repositoryService.getDeploymentResources("dep-1"))
+        .thenReturn(Collections.singletonList(tokenResource));
+
+    // Act and Assert
+    assertThrows(
+        UnauthorizedException.class,
+        () -> camundaEngine.execute("myWorkflow", new ExecutionParameters(new HashMap<>(), "wrong-token")));
+    verify(repositoryService).createProcessDefinitionQuery();
+    verify(repositoryService).getDeploymentResources("dep-1");
+  }
+
+  /**
+   * Test {@link CamundaEngine#execute(String, ExecutionParameters)}.
+   *
+   * <ul>
+   *   <li>Given no token required; dispatches event to processor.
+   * </ul>
+   *
+   * <p>Method under test: {@link CamundaEngine#execute(String, ExecutionParameters)}</p>
+   */
+  @Test
+  @DisplayName("Test execute(String, ExecutionParameters); dispatches event when no token required")
+  @SuppressWarnings("unchecked")
+  void testExecute_noTokenRequired_dispatchesEvent() throws Exception {
+    // Arrange
+    RealTimeEventProcessor<RequestReceivedEvent> processor = mock(RealTimeEventProcessor.class);
+    when(processor.sourceType()).thenReturn(RequestReceivedEvent.class);
+    doNothing().when(processor).process(any());
+
+    List<RealTimeEventProcessor<?>> processors = new ArrayList<>();
+    processors.add(processor);
+
+    CamundaEngine engineWithProcessor =
+        new CamundaEngine(repositoryService, camundaBpmnBuilder, processors, auditTrailLogAction);
+
+    ProcessDefinition processDefinition = mock(ProcessDefinition.class);
+    when(processDefinition.getName()).thenReturn("myWorkflow");
+    when(processDefinition.getDeploymentId()).thenReturn("dep-1");
+
+    ProcessDefinitionQuery query = mock(ProcessDefinitionQuery.class);
+    when(query.active()).thenReturn(query);
+    when(query.list()).thenReturn(Collections.singletonList(processDefinition));
+    when(repositoryService.createProcessDefinitionQuery()).thenReturn(query);
+    when(repositoryService.getDeploymentResources("dep-1")).thenReturn(new ArrayList<>());
+
+    // Act
+    engineWithProcessor.execute("myWorkflow", new ExecutionParameters(new HashMap<>(), ""));
+
+    // Assert
+    verify(repositoryService).createProcessDefinitionQuery();
+    verify(processor).process(any(RealTimeEvent.class));
+  }
+
+  /**
+   * Test {@link CamundaEngine#undeployByWorkflowId(String)}.
+   *
+   * <ul>
+   *   <li>Then stops all matching deployments.
+   * </ul>
+   *
+   * <p>Method under test: {@link CamundaEngine#undeployByWorkflowId(String)}</p>
+   */
+  @Test
+  @DisplayName("Test undeployByWorkflowId(String); stops all matching deployments")
+  void testUndeployByWorkflowId_success() {
+    // Arrange
+    DeploymentEntity deploymentEntity = mock(DeploymentEntity.class);
+    when(deploymentEntity.getId()).thenReturn("dep-1");
+    when(deploymentEntity.getName()).thenReturn("myWorkflow");
+
+    ArrayList<Deployment> deployments = new ArrayList<>();
+    deployments.add(deploymentEntity);
+
+    DeploymentQueryImpl deploymentQuery = mock(DeploymentQueryImpl.class);
+    when(deploymentQuery.deploymentName(anyString())).thenReturn(deploymentQuery);
+    when(deploymentQuery.list()).thenReturn(deployments);
+    when(repositoryService.createDeploymentQuery()).thenReturn(deploymentQuery);
+    doNothing().when(repositoryService).deleteDeployment(anyString(), anyBoolean());
+    doNothing().when(auditTrailLogAction).undeployed(any(Deployment.class));
+
+    // Act
+    camundaEngine.undeployByWorkflowId("myWorkflow");
+
+    // Assert
+    verify(repositoryService).createDeploymentQuery();
+    verify(repositoryService).deleteDeployment("dep-1", true);
+    verify(auditTrailLogAction).undeployed(isA(Deployment.class));
+  }
+
+  /**
+   * Test {@link CamundaEngine#undeployByDeploymentId(String)}.
+   *
+   * <ul>
+   *   <li>Then stops the deployment with the given id.
+   * </ul>
+   *
+   * <p>Method under test: {@link CamundaEngine#undeployByDeploymentId(String)}</p>
+   */
+  @Test
+  @DisplayName("Test undeployByDeploymentId(String); stops the deployment with given id")
+  void testUndeployByDeploymentId_success() {
+    // Arrange
+    DeploymentEntity deploymentEntity = mock(DeploymentEntity.class);
+    when(deploymentEntity.getId()).thenReturn("dep-1");
+    when(deploymentEntity.getName()).thenReturn("myWorkflow");
+
+    DeploymentQueryImpl deploymentQuery = mock(DeploymentQueryImpl.class);
+    when(deploymentQuery.deploymentId(anyString())).thenReturn(deploymentQuery);
+    when(deploymentQuery.singleResult()).thenReturn(deploymentEntity);
+    when(repositoryService.createDeploymentQuery()).thenReturn(deploymentQuery);
+    doNothing().when(repositoryService).deleteDeployment(anyString(), anyBoolean());
+    doNothing().when(auditTrailLogAction).undeployed(any(Deployment.class));
+
+    // Act
+    camundaEngine.undeployByDeploymentId("dep-1");
+
+    // Assert
+    verify(repositoryService).createDeploymentQuery();
+    verify(repositoryService).deleteDeployment("dep-1", true);
+    verify(auditTrailLogAction).undeployed(isA(Deployment.class));
+  }
+
+  /**
+   * Test {@link CamundaEngine#translate(Workflow)} with duplicate activity IDs.
+   *
+   * <ul>
+   *   <li>Then throw {@link UniqueIdViolationException}.
+   * </ul>
+   *
+   * <p>Method under test: checkUniquenessOfActivitiesId via {@link CamundaEngine#translate(Workflow)}</p>
+   */
+  @Test
+  @DisplayName("Test translate(Workflow); given duplicate activity IDs; then throw UniqueIdViolationException")
+  void testTranslate_withDuplicateActivityIds_throwsUniqueIdViolationException() {
+    // Arrange
+    Debug debug1 = new Debug();
+    debug1.setId("duplicate-id");
+    Activity activity1 = new Activity();
+    activity1.setImplementation(debug1);
+
+    Debug debug2 = new Debug();
+    debug2.setId("duplicate-id");
+    Activity activity2 = new Activity();
+    activity2.setImplementation(debug2);
+
+    ArrayList<Activity> activities = new ArrayList<>();
+    activities.add(activity1);
+    activities.add(activity2);
+
+    Properties properties = new Properties();
+    properties.setPublish(true);
+
+    Workflow workflow = new Workflow();
+    workflow.setActivities(activities);
+    workflow.setId("test-workflow");
+    workflow.setProperties(properties);
+    workflow.setVariables(new HashMap<>());
+    workflow.setVersion(1L);
+
+    // Act and Assert
+    assertThrows(UniqueIdViolationException.class, () -> camundaEngine.translate(workflow));
   }
 }
