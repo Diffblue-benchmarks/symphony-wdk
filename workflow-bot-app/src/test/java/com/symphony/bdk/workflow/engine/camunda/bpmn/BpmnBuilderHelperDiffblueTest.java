@@ -1696,4 +1696,158 @@ class BpmnBuilderHelperDiffblueTest {
     // Assert
     assertFalse(actualHasLoopAfterSubProcessResult);
   }
+
+  /**
+   * Test {@link BpmnBuilderHelper#hasLoopAfterSubProcess(BuildProcessContext, NodeChildren,
+   * WorkflowNodeType)}.
+   *
+   * <ul>
+   *   <li>Given context hasEventSubProcess returns {@code true} and child is already built.
+   *   <li>Then return {@code true}.
+   * </ul>
+   *
+   * <p>Method under test: {@link BpmnBuilderHelper#hasLoopAfterSubProcess(BuildProcessContext,
+   * WorkflowDirectedGraph.NodeChildren, WorkflowNodeType)}
+   */
+  @Test
+  @DisplayName(
+      "Test hasLoopAfterSubProcess(BuildProcessContext, NodeChildren, WorkflowNodeType); given hasEventSubProcess returns 'true' and child is already built; then return 'true'")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({
+    "boolean BpmnBuilderHelper.hasLoopAfterSubProcess(BuildProcessContext, WorkflowDirectedGraph.NodeChildren, WorkflowNodeType)"
+  })
+  void testHasLoopAfterSubProcess_givenHasEventSubProcessTrueAndChildAlreadyBuilt_thenReturnTrue() {
+    // Arrange
+    BuildProcessContext context = mock(BuildProcessContext.class);
+    when(context.hasEventSubProcess()).thenReturn(true);
+    when(context.isAlreadyBuilt(Mockito.<String>any())).thenReturn(true);
+
+    NodeChildren currentNodeChildren = new NodeChildren();
+    currentNodeChildren.addChild("Child");
+
+    // Act
+    boolean result =
+        BpmnBuilderHelper.hasLoopAfterSubProcess(
+            context, currentNodeChildren, WorkflowNodeType.ACTIVITY_COMPLETED_EVENT);
+
+    // Assert
+    verify(context).hasEventSubProcess();
+    verify(context).isAlreadyBuilt("Child");
+    assertTrue(result);
+  }
+
+  /**
+   * Test {@link BpmnBuilderHelper#hasLoopAfterSubProcess(BuildProcessContext, NodeChildren,
+   * WorkflowNodeType)}.
+   *
+   * <ul>
+   *   <li>Given node type is not ACTIVITY_COMPLETED_EVENT.
+   *   <li>Then return {@code false}.
+   * </ul>
+   *
+   * <p>Method under test: {@link BpmnBuilderHelper#hasLoopAfterSubProcess(BuildProcessContext,
+   * WorkflowDirectedGraph.NodeChildren, WorkflowNodeType)}
+   */
+  @Test
+  @DisplayName(
+      "Test hasLoopAfterSubProcess(BuildProcessContext, NodeChildren, WorkflowNodeType); given node type is not ACTIVITY_COMPLETED_EVENT; then return 'false'")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({
+    "boolean BpmnBuilderHelper.hasLoopAfterSubProcess(BuildProcessContext, WorkflowDirectedGraph.NodeChildren, WorkflowNodeType)"
+  })
+  void testHasLoopAfterSubProcess_givenNonActivityCompletedEventType_thenReturnFalse() {
+    // Arrange
+    BuildProcessContext context = mock(BuildProcessContext.class);
+
+    NodeChildren currentNodeChildren = new NodeChildren();
+    currentNodeChildren.addChild("Child");
+
+    // Act
+    boolean result =
+        BpmnBuilderHelper.hasLoopAfterSubProcess(
+            context, currentNodeChildren, WorkflowNodeType.SIGNAL_EVENT);
+
+    // Assert
+    assertFalse(result);
+  }
+
+  /**
+   * Test {@link BpmnBuilderHelper#hasLoopAfterSubProcess(BuildProcessContext, NodeChildren,
+   * WorkflowNodeType)}.
+   *
+   * <ul>
+   *   <li>Given context hasEventSubProcess returns {@code false}.
+   *   <li>Then return {@code false}.
+   * </ul>
+   *
+   * <p>Method under test: {@link BpmnBuilderHelper#hasLoopAfterSubProcess(BuildProcessContext,
+   * WorkflowDirectedGraph.NodeChildren, WorkflowNodeType)}
+   */
+  @Test
+  @DisplayName(
+      "Test hasLoopAfterSubProcess(BuildProcessContext, NodeChildren, WorkflowNodeType); given hasEventSubProcess returns 'false'; then return 'false'")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({
+    "boolean BpmnBuilderHelper.hasLoopAfterSubProcess(BuildProcessContext, WorkflowDirectedGraph.NodeChildren, WorkflowNodeType)"
+  })
+  void testHasLoopAfterSubProcess_givenHasEventSubProcessFalse_thenReturnFalse() {
+    // Arrange
+    BuildProcessContext context = mock(BuildProcessContext.class);
+    when(context.hasEventSubProcess()).thenReturn(false);
+
+    NodeChildren currentNodeChildren = new NodeChildren();
+    currentNodeChildren.addChild("Child");
+
+    // Act
+    boolean result =
+        BpmnBuilderHelper.hasLoopAfterSubProcess(
+            context, currentNodeChildren, WorkflowNodeType.ACTIVITY_COMPLETED_EVENT);
+
+    // Assert
+    verify(context).hasEventSubProcess();
+    assertFalse(result);
+  }
+
+  /**
+   * Test {@link BpmnBuilderHelper#hasLoopAfterSubProcess(BuildProcessContext, NodeChildren,
+   * WorkflowNodeType)}.
+   *
+   * <ul>
+   *   <li>Given context hasEventSubProcess returns {@code true} but no child is already built.
+   *   <li>Then return {@code false}.
+   * </ul>
+   *
+   * <p>Method under test: {@link BpmnBuilderHelper#hasLoopAfterSubProcess(BuildProcessContext,
+   * WorkflowDirectedGraph.NodeChildren, WorkflowNodeType)}
+   */
+  @Test
+  @DisplayName(
+      "Test hasLoopAfterSubProcess(BuildProcessContext, NodeChildren, WorkflowNodeType); given hasEventSubProcess returns 'true' but no child already built; then return 'false'")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({
+    "boolean BpmnBuilderHelper.hasLoopAfterSubProcess(BuildProcessContext, WorkflowDirectedGraph.NodeChildren, WorkflowNodeType)"
+  })
+  void testHasLoopAfterSubProcess_givenHasEventSubProcessTrueAndNoChildBuilt_thenReturnFalse() {
+    // Arrange
+    BuildProcessContext context = mock(BuildProcessContext.class);
+    when(context.hasEventSubProcess()).thenReturn(true);
+    when(context.isAlreadyBuilt(Mockito.<String>any())).thenReturn(false);
+
+    NodeChildren currentNodeChildren = new NodeChildren();
+    currentNodeChildren.addChild("Child");
+
+    // Act
+    boolean result =
+        BpmnBuilderHelper.hasLoopAfterSubProcess(
+            context, currentNodeChildren, WorkflowNodeType.ACTIVITY_COMPLETED_EVENT);
+
+    // Assert
+    verify(context).hasEventSubProcess();
+    verify(context).isAlreadyBuilt("Child");
+    assertFalse(result);
+  }
 }
