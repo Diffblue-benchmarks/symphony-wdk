@@ -2,6 +2,7 @@ package com.symphony.bdk.workflow.exception;
 
 import com.symphony.bdk.workflow.api.v1.dto.ErrorResponse;
 
+import jakarta.persistence.OptimisticLockException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -67,6 +68,17 @@ class GlobalExceptionHandlerTest {
         globalExceptionHandler.handle(new DuplicateException("Duplicate exception's message"));
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getBody()).isEqualTo(expectedErrorResponse);
+  }
+
+  @Test
+  void testOptimisticLockException() {
+    ErrorResponse expectedErrorResponse =
+        new ErrorResponse("Workflow being updated is outdated, please refresh then update again.");
+    ResponseEntity<ErrorResponse> response =
+        globalExceptionHandler.handle(new OptimisticLockException("Optimistic lock message"));
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
     assertThat(response.getBody()).isEqualTo(expectedErrorResponse);
   }
 
