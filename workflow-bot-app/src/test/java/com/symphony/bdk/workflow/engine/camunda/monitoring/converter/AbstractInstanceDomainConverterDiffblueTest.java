@@ -163,4 +163,136 @@ class AbstractInstanceDomainConverterDiffblueTest {
     // Arrange, Act and Assert
     assertNull(abstractInstanceDomainConverter.resolveStatus("His Proc Instance State", "42"));
   }
+
+  /**
+   * Test {@link
+   * AbstractInstanceDomainConverter#instanceCommonBuilder(HistoricProcessInstanceEntity)}.
+   *
+   * <ul>
+   *   <li>Given null endTime.
+   *   <li>Then endDate is null.
+   * </ul>
+   */
+  @Test
+  @DisplayName(
+      "Test instanceCommonBuilder(HistoricProcessInstanceEntity); given null endTime; then endDate is null")
+  void testInstanceCommonBuilder_givenNullEndTime() {
+    // Arrange
+    HistoricProcessInstanceEntity hisProcInstance = mock(HistoricProcessInstanceEntity.class);
+    when(hisProcInstance.getDurationInMillis()).thenReturn(1L);
+    when(hisProcInstance.getEndActivityId()).thenReturn("42");
+    when(hisProcInstance.getState()).thenReturn("ACTIVE");
+    when(hisProcInstance.getEndTime()).thenReturn(null);
+    when(hisProcInstance.getId()).thenReturn("42");
+    when(hisProcInstance.getProcessDefinitionKey()).thenReturn("Process Definition Key");
+    when(hisProcInstance.getProcessInstanceId()).thenReturn("42");
+    when(hisProcInstance.getStartTime())
+        .thenReturn(
+            Date.from(LocalDate.of(1970, 1, 1).atStartOfDay().atZone(ZoneOffset.UTC).toInstant()));
+
+    // Act
+    var result = abstractInstanceDomainConverter.instanceCommonBuilder(hisProcInstance).build();
+
+    // Assert
+    assertNull(result.getEndDate());
+  }
+
+  /**
+   * Test {@link
+   * AbstractInstanceDomainConverter#instanceCommonBuilder(HistoricProcessInstanceEntity)}.
+   *
+   * <ul>
+   *   <li>Given null durationInMillis.
+   *   <li>Then duration is null.
+   * </ul>
+   */
+  @Test
+  @DisplayName(
+      "Test instanceCommonBuilder(HistoricProcessInstanceEntity); given null durationInMillis; then duration is null")
+  void testInstanceCommonBuilder_givenNullDuration() {
+    // Arrange
+    HistoricProcessInstanceEntity hisProcInstance = mock(HistoricProcessInstanceEntity.class);
+    when(hisProcInstance.getDurationInMillis()).thenReturn(null);
+    when(hisProcInstance.getEndActivityId()).thenReturn("42");
+    when(hisProcInstance.getState()).thenReturn("ACTIVE");
+    when(hisProcInstance.getEndTime()).thenReturn(null);
+    when(hisProcInstance.getId()).thenReturn("42");
+    when(hisProcInstance.getProcessDefinitionKey()).thenReturn("Process Definition Key");
+    when(hisProcInstance.getProcessInstanceId()).thenReturn("42");
+    when(hisProcInstance.getStartTime())
+        .thenReturn(
+            Date.from(LocalDate.of(1970, 1, 1).atStartOfDay().atZone(ZoneOffset.UTC).toInstant()));
+
+    // Act
+    var result = abstractInstanceDomainConverter.instanceCommonBuilder(hisProcInstance).build();
+
+    // Assert
+    assertNull(result.getDuration());
+  }
+
+  /**
+   * Test {@link AbstractInstanceDomainConverter#resolveStatus(String, String)}.
+   *
+   * <ul>
+   *   <li>When {@code PENDING}.
+   *   <li>Then return {@code PENDING}.
+   * </ul>
+   */
+  @Test
+  @DisplayName("Test resolveStatus(String, String); when 'PENDING'; then return 'PENDING'")
+  void testResolveStatus_whenPending_thenReturnPending() {
+    // Arrange, Act and Assert
+    assertEquals("PENDING", abstractInstanceDomainConverter.resolveStatus("PENDING", "42"));
+  }
+
+  /**
+   * Test {@link AbstractInstanceDomainConverter#resolveStatus(String, String)}.
+   *
+   * <ul>
+   *   <li>When {@code COMPLETED} and endActivityId starts with 'endEvent'.
+   *   <li>Then return {@code COMPLETED}.
+   * </ul>
+   */
+  @Test
+  @DisplayName(
+      "Test resolveStatus(String, String); when 'COMPLETED' and endActivityId starts with 'endEvent'; then return 'COMPLETED'")
+  void testResolveStatus_whenCompletedWithEndEvent_thenReturnCompleted() {
+    // Arrange, Act and Assert
+    assertEquals(
+        "COMPLETED",
+        abstractInstanceDomainConverter.resolveStatus("COMPLETED", "endEvent_123"));
+  }
+
+  /**
+   * Test {@link AbstractInstanceDomainConverter#resolveStatus(String, String)}.
+   *
+   * <ul>
+   *   <li>When {@code COMPLETED} and endActivityId does not start with 'endEvent'.
+   *   <li>Then return {@code FAILED}.
+   * </ul>
+   */
+  @Test
+  @DisplayName(
+      "Test resolveStatus(String, String); when 'COMPLETED' and endActivityId does not start with 'endEvent'; then return 'FAILED'")
+  void testResolveStatus_whenCompletedWithoutEndEvent_thenReturnFailed() {
+    // Arrange, Act and Assert
+    assertEquals(
+        "FAILED", abstractInstanceDomainConverter.resolveStatus("COMPLETED", "someOtherActivity"));
+  }
+
+  /**
+   * Test {@link AbstractInstanceDomainConverter#resolveStatus(String, String)}.
+   *
+   * <ul>
+   *   <li>When {@code COMPLETED} and endActivityId is blank.
+   *   <li>Then return {@code FAILED}.
+   * </ul>
+   */
+  @Test
+  @DisplayName(
+      "Test resolveStatus(String, String); when 'COMPLETED' and endActivityId is blank; then return 'FAILED'")
+  void testResolveStatus_whenCompletedWithBlankEndActivityId_thenReturnFailed() {
+    // Arrange, Act and Assert
+    assertEquals("FAILED", abstractInstanceDomainConverter.resolveStatus("COMPLETED", ""));
+  }
 }
