@@ -1,5 +1,6 @@
 package com.symphony.bdk.workflow.engine.executor.room;
 
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.atLeast;
@@ -9,6 +10,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
+import com.symphony.bdk.core.OboServices;
+import com.symphony.bdk.core.auth.AuthSession;
 import com.symphony.bdk.core.auth.AuthenticatorFactory;
 import com.symphony.bdk.core.config.model.BdkConfig;
 import com.symphony.bdk.core.service.connection.ConnectionService;
@@ -20,6 +23,7 @@ import com.symphony.bdk.ext.group.SymphonyGroupService;
 import com.symphony.bdk.gen.api.model.V3RoomDetail;
 import com.symphony.bdk.workflow.engine.SpringBdkGateway;
 import com.symphony.bdk.workflow.engine.executor.ActivityExecutorContext;
+import com.symphony.bdk.workflow.swadl.v1.activity.Obo;
 import com.symphony.bdk.workflow.swadl.v1.activity.room.GetRoom;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -78,5 +82,108 @@ class GetRoomExecutorDiffblueTest {
     verify(execution).bdk();
     verify(execution, atLeast(1)).getActivity();
     verify(execution).setOutputVariable(eq("room"), isA(Object.class));
+  }
+
+  /**
+   * Test {@link GetRoomExecutor#execute(ActivityExecutorContext)}.
+   *
+   * <ul>
+   *   <li>Given {@link GetRoom} activity with OBO username set.
+   *   <li>Then calls {@link OboServices#streams()} and {@link StreamService#getRoomInfo(String)}.
+   * </ul>
+   *
+   * <p>Method under test: {@link GetRoomExecutor#execute(ActivityExecutorContext)}
+   */
+  @Test
+  @DisplayName(
+      "Test execute(ActivityExecutorContext); given GetRoom activity with OBO username; then calls OBO getRoomInfo(String)")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({"void GetRoomExecutor.execute(ActivityExecutorContext)"})
+  void testExecute_givenOboActivity_thenCallsOboGetRoomInfo() {
+    // Arrange
+    GetRoomExecutor getRoomExecutor = new GetRoomExecutor();
+
+    Obo obo = new Obo();
+    obo.setUsername("testUser");
+
+    GetRoom getRoom = new GetRoom();
+    getRoom.setStreamId("streamId");
+    getRoom.setObo(obo);
+
+    StreamService oboStreamService = mock(StreamService.class);
+    when(oboStreamService.getRoomInfo(Mockito.<String>any())).thenReturn(new V3RoomDetail());
+
+    OboServices oboServices = mock(OboServices.class);
+    when(oboServices.streams()).thenReturn(oboStreamService);
+
+    AuthSession authSession = mock(AuthSession.class);
+    SpringBdkGateway springBdkGateway = mock(SpringBdkGateway.class);
+    when(springBdkGateway.obo(Mockito.<String>any())).thenReturn(authSession);
+    when(springBdkGateway.obo(Mockito.<AuthSession>any())).thenReturn(oboServices);
+
+    ActivityExecutorContext<GetRoom> execution = mock(ActivityExecutorContext.class);
+    doNothing().when(execution).setOutputVariable(Mockito.<String>any(), Mockito.<Object>any());
+    when(execution.bdk()).thenReturn(springBdkGateway);
+    when(execution.getActivity()).thenReturn(getRoom);
+
+    // Act
+    getRoomExecutor.execute(execution);
+
+    // Assert
+    verify(oboStreamService).getRoomInfo("streamId");
+    verify(execution).setOutputVariable(eq("room"), isA(Object.class));
+  }
+
+  /**
+   * Test {@link GetRoomExecutor#doOboWithCache(ActivityExecutorContext)}.
+   *
+   * <ul>
+   *   <li>Then calls {@link OboServices#streams()} and {@link StreamService#getRoomInfo(String)}.
+   * </ul>
+   *
+   * <p>Method under test: {@link GetRoomExecutor#doOboWithCache(ActivityExecutorContext)}
+   */
+  @Test
+  @DisplayName(
+      "Test doOboWithCache(ActivityExecutorContext); then calls OBO getRoomInfo(String)")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({
+    "com.symphony.bdk.gen.api.model.V3RoomDetail GetRoomExecutor.doOboWithCache(ActivityExecutorContext)"
+  })
+  void testDoOboWithCache_thenCallsGetRoomInfo() throws Exception {
+    // Arrange
+    GetRoomExecutor getRoomExecutor = new GetRoomExecutor();
+
+    Obo obo = new Obo();
+    obo.setUsername("testUser");
+
+    GetRoom getRoom = new GetRoom();
+    getRoom.setStreamId("streamId");
+    getRoom.setObo(obo);
+
+    V3RoomDetail roomDetail = new V3RoomDetail();
+    StreamService oboStreamService = mock(StreamService.class);
+    when(oboStreamService.getRoomInfo(Mockito.<String>any())).thenReturn(roomDetail);
+
+    OboServices oboServices = mock(OboServices.class);
+    when(oboServices.streams()).thenReturn(oboStreamService);
+
+    AuthSession authSession = mock(AuthSession.class);
+    SpringBdkGateway springBdkGateway = mock(SpringBdkGateway.class);
+    when(springBdkGateway.obo(Mockito.<String>any())).thenReturn(authSession);
+    when(springBdkGateway.obo(Mockito.<AuthSession>any())).thenReturn(oboServices);
+
+    ActivityExecutorContext<GetRoom> execution = mock(ActivityExecutorContext.class);
+    when(execution.bdk()).thenReturn(springBdkGateway);
+    when(execution.getActivity()).thenReturn(getRoom);
+
+    // Act
+    V3RoomDetail result = getRoomExecutor.doOboWithCache(execution);
+
+    // Assert
+    assertSame(roomDetail, result);
+    verify(oboStreamService).getRoomInfo("streamId");
   }
 }
