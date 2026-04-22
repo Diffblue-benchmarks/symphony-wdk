@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.diffblue.cover.annotations.ManagedByDiffblue;
@@ -428,6 +430,82 @@ class BuildProcessContextDiffblueTest {
   @MethodsUnderTest({"boolean BuildProcessContext.hasTimeoutSubProcess()"})
   void testHasTimeoutSubProcess() {
     // Arrange, Act and Assert
+    assertFalse(buildProcessContext.hasTimeoutSubProcess());
+  }
+
+  /**
+   * Test {@link BuildProcessContext#addNodeBuilder(String, AbstractFlowNodeBuilder)}.
+   *
+   * <p>Method under test: {@link BuildProcessContext#addNodeBuilder(String,
+   * AbstractFlowNodeBuilder)}
+   */
+  @Test
+  @DisplayName("Test addNodeBuilder(String, AbstractFlowNodeBuilder)")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({"void BuildProcessContext.addNodeBuilder(String, AbstractFlowNodeBuilder)"})
+  void testAddNodeBuilder() {
+    // Arrange
+    AbstractFlowNodeBuilder<?, ?> mockBuilder = mock(AbstractFlowNodeBuilder.class);
+
+    // Act
+    buildProcessContext.addNodeBuilder("nodeId", mockBuilder);
+
+    // Assert
+    assertSame(mockBuilder, buildProcessContext.getNodeBuilder("nodeId"));
+    assertTrue(buildProcessContext.isAlreadyBuilt("nodeId"));
+  }
+
+  /**
+   * Test {@link BuildProcessContext#removeLastEventSubProcessBuilder()}.
+   *
+   * <p>Method under test: {@link BuildProcessContext#removeLastEventSubProcessBuilder()}
+   */
+  @Test
+  @DisplayName("Test removeLastEventSubProcessBuilder()")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({
+    "EventSubProcessBuilder BuildProcessContext.removeLastEventSubProcessBuilder()"
+  })
+  void testRemoveLastEventSubProcessBuilder() {
+    // Arrange
+    EventSubProcessBuilder mockBuilder = mock(EventSubProcessBuilder.class);
+    buildProcessContext.cacheEventSubProcessToDone(mockBuilder);
+
+    // Act
+    EventSubProcessBuilder result = buildProcessContext.removeLastEventSubProcessBuilder();
+
+    // Assert
+    assertSame(mockBuilder, result);
+    assertFalse(buildProcessContext.hasEventSubProcess());
+  }
+
+  /**
+   * Test {@link BuildProcessContext#removeLastSubProcessTimeoutBuilder()}.
+   *
+   * <p>Method under test: {@link BuildProcessContext#removeLastSubProcessTimeoutBuilder()}
+   */
+  @Test
+  @DisplayName("Test removeLastSubProcessTimeoutBuilder()")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({
+    "AbstractFlowNodeBuilder BuildProcessContext.removeLastSubProcessTimeoutBuilder()"
+  })
+  void testRemoveLastSubProcessTimeoutBuilder() {
+    // Arrange
+    SubProcessBuilder mockSubProcessBuilder = mock(SubProcessBuilder.class);
+    BoundaryEventBuilder mockBoundaryEventBuilder = mock(BoundaryEventBuilder.class);
+    when(mockSubProcessBuilder.boundaryEvent()).thenReturn(mockBoundaryEventBuilder);
+    when(mockBoundaryEventBuilder.error(anyString())).thenReturn(mockBoundaryEventBuilder);
+    buildProcessContext.cacheSubProcessTimeoutToDone(mockSubProcessBuilder);
+
+    // Act
+    AbstractFlowNodeBuilder<?, ?> result = buildProcessContext.removeLastSubProcessTimeoutBuilder();
+
+    // Assert
+    assertSame(mockBoundaryEventBuilder, result);
     assertFalse(buildProcessContext.hasTimeoutSubProcess());
   }
 }
