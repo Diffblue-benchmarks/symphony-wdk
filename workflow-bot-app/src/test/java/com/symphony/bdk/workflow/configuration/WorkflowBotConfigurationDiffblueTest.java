@@ -1,10 +1,13 @@
 package com.symphony.bdk.workflow.configuration;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
+import com.symphony.bdk.ext.group.SymphonyGroupBdkExtension;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +37,29 @@ class WorkflowBotConfigurationDiffblueTest {
     assertTrue(
         new WorkflowBotConfiguration().workflowResourcesProvider()
             instanceof WorkflowResourcesProvider);
+  }
+
+  /**
+   * Test {@link WorkflowBotConfiguration#groupExtension()}.
+   *
+   * <ul>
+   *   <li>Given {@link WorkflowBotConfiguration} (default constructor).
+   * </ul>
+   *
+   * <p>Method under test: {@link WorkflowBotConfiguration#groupExtension()}
+   */
+  @Test
+  @DisplayName("Test groupExtension(); given WorkflowBotConfiguration (default constructor)")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({
+    "com.symphony.bdk.ext.group.SymphonyGroupBdkExtension WorkflowBotConfiguration.groupExtension()"
+  })
+  void testGroupExtension_givenWorkflowBotConfiguration() {
+    // Arrange, Act and Assert
+    assertNotNull(new WorkflowBotConfiguration().groupExtension());
+    assertInstanceOf(SymphonyGroupBdkExtension.class,
+        new WorkflowBotConfiguration().groupExtension());
   }
 
   /**
