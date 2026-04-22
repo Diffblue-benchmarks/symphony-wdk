@@ -1843,4 +1843,28 @@ class WorkflowValidatorDiffblueTest {
             WorkflowValidator.validateExistingNodeId(
                 "42", "42", "42", new WorkflowDirectedGraph("42")));
   }
+
+  /**
+   * Test {@link WorkflowValidator#validateExistingNodeId(String, String, String, WorkflowDirectedGraph)}.
+   *
+   * <p>Method under test: {@link WorkflowValidator#validateExistingNodeId(String, String, String,
+   * WorkflowDirectedGraph)}
+   */
+  @Test
+  @DisplayName(
+      "Test validateExistingNodeId(String, String, String, WorkflowDirectedGraph); when node has been seen before, then no exception is thrown")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({
+    "void WorkflowValidator.validateExistingNodeId(String, String, String, WorkflowDirectedGraph)"
+  })
+  void testValidateExistingNodeId_whenNodeHasBeenSeenBefore() {
+    // Arrange
+    WorkflowDirectedGraph graph = new WorkflowDirectedGraph("42");
+    graph.addParent("node1", "parentNode");
+
+    // Act and Assert
+    assertDoesNotThrow(
+        () -> WorkflowValidator.validateExistingNodeId("node1", "activityId", "42", graph));
+  }
 }
