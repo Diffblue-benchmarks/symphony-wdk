@@ -1,11 +1,14 @@
 package com.symphony.bdk.workflow.engine.camunda;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.diffblue.cover.annotations.ManagedByDiffblue;
@@ -322,5 +325,172 @@ class WorkflowDirectedGraphServiceDiffblueTest {
 
     // Assert
     assertSame(directedGraph, actualPutDirectedGraphResult);
+  }
+
+  /**
+   * Test {@link WorkflowDirectedGraphService#getDirectedGraph(String, Long)} with a present
+   * repository returning empty optional — covers lines 43-45 and 47-48 via direct instantiation
+   * (bypasses Spring cache proxy).
+   */
+  @Test
+  @DisplayName(
+      "Test getDirectedGraph(String, Long); given empty repository; then return null")
+  void testGetDirectedGraphWithIdVersion_mapToDirectedGraph_emptyRepository() {
+    // Arrange
+    Optional<VersionedWorkflowRepository> versionedWorkflowRepositoryOpt = Optional.empty();
+    SessionApi sessionApi = new SessionApi(null);
+    SessionService localSessionService =
+        new SessionService(sessionApi, new RetryWithRecoveryBuilder<>());
+    ObjectConverter mockObjectConverter = mock(ObjectConverter.class);
+
+    WorkflowDirectedGraphService service =
+        new WorkflowDirectedGraphService(
+            versionedWorkflowRepositoryOpt, localSessionService, mockObjectConverter);
+
+    // Act
+    WorkflowDirectedGraph result = service.getDirectedGraph("workflow-42", 1L);
+
+    // Assert
+    assertNull(result);
+  }
+
+  /**
+   * Test {@link WorkflowDirectedGraphService#getDirectedGraph(String, Long)} with a present
+   * repository returning valid workflow — covers lines 47-48 via direct instantiation.
+   */
+  @Test
+  @DisplayName(
+      "Test getDirectedGraph(String, Long); given present repository returning valid workflow; then return directed graph")
+  void testGetDirectedGraphWithIdVersion_mapToDirectedGraph_nonEmptySupplierResult() {
+    // Arrange
+    VersionedWorkflowRepository mockRepo = mock(VersionedWorkflowRepository.class);
+    Optional<VersionedWorkflowRepository> repoOpt = Optional.of(mockRepo);
+    SessionApi sessionApi = new SessionApi(null);
+    SessionService localSessionService =
+        new SessionService(sessionApi, new RetryWithRecoveryBuilder<>());
+    ObjectConverter mockObjectConverter = mock(ObjectConverter.class);
+
+    VersionedWorkflow versionedWorkflow = new VersionedWorkflow();
+    versionedWorkflow.setActive(true);
+    versionedWorkflow.setCreatedBy(1L);
+    versionedWorkflow.setDeploymentId("deploy-42");
+    versionedWorkflow.setDescription("Test workflow version");
+    versionedWorkflow.setId("wf-42");
+    versionedWorkflow.setPublished(true);
+    versionedWorkflow.setSwadl("swadl-content");
+    versionedWorkflow.setVersion(5L);
+    versionedWorkflow.setWorkflowId("workflow-version-42");
+    when(mockRepo.findByWorkflowIdAndVersion("workflow-version-42", 5L))
+        .thenReturn(Optional.of(versionedWorkflow));
+
+    Properties properties = new Properties();
+    properties.setPublish(true);
+    Workflow workflow = new Workflow();
+    workflow.setActivities(new ArrayList<>());
+    workflow.setId("workflow-version-42");
+    workflow.setProperties(properties);
+    workflow.setVariables(new HashMap<>());
+    workflow.setVersion(5L);
+    Mockito.doReturn(workflow)
+        .when(mockObjectConverter)
+        .convert(Mockito.<Object>any(), Mockito.<Object>any(), eq(Workflow.class));
+
+    WorkflowDirectedGraphService service =
+        new WorkflowDirectedGraphService(repoOpt, localSessionService, mockObjectConverter);
+
+    // Act
+    WorkflowDirectedGraph result = service.getDirectedGraph("workflow-version-42", 5L);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals("workflow-version-42", result.getWorkflowId());
+    assertEquals(5L, result.getVersion().longValue());
+    verify(mockObjectConverter).convert(isA(Object.class), isA(Object.class), isA(Class.class));
+    verify(mockRepo).findByWorkflowIdAndVersion("workflow-version-42", 5L);
+  }
+
+  /**
+   * Test {@link WorkflowDirectedGraphService#getDirectedGraph(String)} with a present repository
+   * that returns an empty workflow optional — covers mapToDirectedGraph body with empty supplier
+   * result.
+   */
+  @Test
+  @DisplayName(
+      "Test getDirectedGraph(String); given present repository returning empty optional; then return null")
+  void testGetDirectedGraph_mapToDirectedGraph_emptySupplierResult() {
+    // Arrange
+    VersionedWorkflowRepository mockRepo = mock(VersionedWorkflowRepository.class);
+    Optional<VersionedWorkflowRepository> repoOpt = Optional.of(mockRepo);
+    SessionApi sessionApi = new SessionApi(null);
+    SessionService localSessionService =
+        new SessionService(sessionApi, new RetryWithRecoveryBuilder<>());
+    ObjectConverter mockObjectConverter = mock(ObjectConverter.class);
+    when(mockRepo.findByWorkflowIdAndActiveTrue(Mockito.<String>any()))
+        .thenReturn(Optional.empty());
+
+    WorkflowDirectedGraphService service =
+        new WorkflowDirectedGraphService(repoOpt, localSessionService, mockObjectConverter);
+
+    // Act
+    WorkflowDirectedGraph result = service.getDirectedGraph("workflow-empty");
+
+    // Assert
+    assertNull(result);
+    verify(mockRepo).findByWorkflowIdAndActiveTrue("workflow-empty");
+  }
+
+  /**
+   * Test {@link WorkflowDirectedGraphService#getDirectedGraph(String)} with a present repository
+   * that returns a valid VersionedWorkflow — covers mapToDirectedGraph body with non-empty supplier
+   * result.
+   */
+  @Test
+  @DisplayName(
+      "Test getDirectedGraph(String); given present repository returning valid workflow; then return directed graph")
+  void testGetDirectedGraph_mapToDirectedGraph_nonEmptySupplierResult() {
+    // Arrange
+    VersionedWorkflowRepository mockRepo = mock(VersionedWorkflowRepository.class);
+    Optional<VersionedWorkflowRepository> repoOpt = Optional.of(mockRepo);
+    SessionApi sessionApi = new SessionApi(null);
+    SessionService localSessionService =
+        new SessionService(sessionApi, new RetryWithRecoveryBuilder<>());
+    ObjectConverter mockObjectConverter = mock(ObjectConverter.class);
+
+    VersionedWorkflow versionedWorkflow = new VersionedWorkflow();
+    versionedWorkflow.setActive(true);
+    versionedWorkflow.setCreatedBy(1L);
+    versionedWorkflow.setDeploymentId("deploy-1");
+    versionedWorkflow.setDescription("Test workflow");
+    versionedWorkflow.setId("wf-1");
+    versionedWorkflow.setPublished(true);
+    versionedWorkflow.setSwadl("swadl-content");
+    versionedWorkflow.setVersion(100L);
+    versionedWorkflow.setWorkflowId("workflow-present");
+    when(mockRepo.findByWorkflowIdAndActiveTrue("workflow-present"))
+        .thenReturn(Optional.of(versionedWorkflow));
+
+    Properties properties = new Properties();
+    properties.setPublish(true);
+    Workflow workflow = new Workflow();
+    workflow.setActivities(new ArrayList<>());
+    workflow.setId("workflow-present");
+    workflow.setProperties(properties);
+    workflow.setVariables(new HashMap<>());
+    workflow.setVersion(100L);
+    Mockito.doReturn(workflow).when(mockObjectConverter)
+        .convert(Mockito.<Object>any(), Mockito.<Object>any(), eq(Workflow.class));
+
+    WorkflowDirectedGraphService service =
+        new WorkflowDirectedGraphService(repoOpt, localSessionService, mockObjectConverter);
+
+    // Act
+    WorkflowDirectedGraph result = service.getDirectedGraph("workflow-present");
+
+    // Assert
+    assertNotNull(result);
+    assertEquals("workflow-present", result.getWorkflowId());
+    assertEquals(100L, result.getVersion().longValue());
+    verify(mockObjectConverter).convert(isA(Object.class), isA(Object.class), isA(Class.class));
+    verify(mockRepo).findByWorkflowIdAndActiveTrue("workflow-present");
   }
 }
