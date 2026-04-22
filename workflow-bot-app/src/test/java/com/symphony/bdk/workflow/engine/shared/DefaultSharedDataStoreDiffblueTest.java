@@ -1,5 +1,6 @@
 package com.symphony.bdk.workflow.engine.shared;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.verify;
@@ -88,6 +89,51 @@ class DefaultSharedDataStoreDiffblueTest {
 
     // Assert
     verify(sharedDataRepository).findByNamespace("Namespace");
+    verify(sharedDataRepository).save(isA(SharedData.class));
+  }
+
+  /**
+   * Test {@link DefaultSharedDataStore#getNamespaceData(String)} when namespace not found.
+   *
+   * <p>Method under test: {@link DefaultSharedDataStore#getNamespaceData(String)}
+   */
+  @Test
+  @DisplayName("Test getNamespaceData(String) when namespace not found returns empty map")
+  void testGetNamespaceData_whenNamespaceNotFound() {
+    // Arrange
+    when(sharedDataRepository.findByNamespace(Mockito.<String>any())).thenReturn(Optional.empty());
+
+    // Act
+    Map<String, Object> actualNamespaceData = defaultSharedDataStore.getNamespaceData("UnknownNamespace");
+
+    // Assert
+    verify(sharedDataRepository).findByNamespace("UnknownNamespace");
+    assertNotNull(actualNamespaceData);
+    assertTrue(actualNamespaceData.isEmpty());
+  }
+
+  /**
+   * Test {@link DefaultSharedDataStore#putNamespaceData(String, String, Object)} when namespace not found.
+   *
+   * <p>Method under test: {@link DefaultSharedDataStore#putNamespaceData(String, String, Object)}
+   */
+  @Test
+  @DisplayName("Test putNamespaceData(String, String, Object) when namespace not found creates new entry")
+  void testPutNamespaceData_whenNamespaceNotFound() {
+    // Arrange
+    SharedData savedSharedData = new SharedData();
+    savedSharedData.setId("42");
+    savedSharedData.setLastUpdated(1L);
+    savedSharedData.setNamespace("NewNamespace");
+    savedSharedData.setProperties(new HashMap<>());
+    when(sharedDataRepository.save(Mockito.<SharedData>any())).thenReturn(savedSharedData);
+    when(sharedDataRepository.findByNamespace(Mockito.<String>any())).thenReturn(Optional.empty());
+
+    // Act
+    defaultSharedDataStore.putNamespaceData("NewNamespace", "Key", "Data");
+
+    // Assert
+    verify(sharedDataRepository).findByNamespace("NewNamespace");
     verify(sharedDataRepository).save(isA(SharedData.class));
   }
 }
