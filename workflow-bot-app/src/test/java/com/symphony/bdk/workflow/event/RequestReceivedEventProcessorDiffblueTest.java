@@ -1,6 +1,7 @@
 package com.symphony.bdk.workflow.event;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.mock;
@@ -82,5 +83,71 @@ class RequestReceivedEventProcessorDiffblueTest {
     Map<String, Object> args = ((EventHolder<Object>) getResult).getArgs();
     assertEquals(1, args.size());
     assertEquals("request-received_42", args.get(RealTimeEventProcessor.EVENT_NAME_KEY));
+  }
+
+  /**
+   * Test {@link RequestReceivedEventProcessor#RequestReceivedEventProcessor(RuntimeService)}.
+   *
+   * <p>Method under test: {@link RequestReceivedEventProcessor#RequestReceivedEventProcessor(RuntimeService)}
+   */
+  @Test
+  @DisplayName("Test RequestReceivedEventProcessor(RuntimeService) constructor")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({"void RequestReceivedEventProcessor.<init>(RuntimeService)"})
+  void testConstructor() {
+    // Arrange
+    RuntimeService mockRuntimeService = mock(RuntimeService.class);
+
+    // Act
+    RequestReceivedEventProcessor processor = new RequestReceivedEventProcessor(mockRuntimeService);
+
+    // Assert
+    assertNotNull(processor);
+    assertEquals(WorkflowEventType.REQUEST_RECEIVED.getEventName(), processor.eventName);
+  }
+
+  /**
+   * Test {@link RequestReceivedEventProcessor#processEventSource(RequestReceivedEvent, Map)} with
+   * null arguments in {@code RequestReceivedEvent}.
+   *
+   * <p>Method under test: {@link
+   * RequestReceivedEventProcessor#processEventSource(RequestReceivedEvent, Map)}
+   */
+  @Test
+  @DisplayName(
+      "Test processEventSource(RequestReceivedEvent, Map) with null arguments; then args contains only event name key")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({
+    "void RequestReceivedEventProcessor.processEventSource(RequestReceivedEvent, Map)"
+  })
+  void testProcessEventSource_withNullArguments() throws Exception {
+    // Arrange
+    CommandExecutor commandExecutor = mock(CommandExecutor.class);
+    when(commandExecutor.execute(Mockito.<Command<Void>>any())).thenReturn(null);
+    when(runtimeService.createSignalEvent(Mockito.<String>any()))
+        .thenReturn(new SignalEventReceivedBuilderImpl(commandExecutor, "Signal Name"));
+
+    RequestReceivedEvent eventSource = new RequestReceivedEvent();
+    eventSource.setArguments(null);
+    eventSource.setId("42");
+    eventSource.setToken("ABC123");
+    eventSource.setWorkflowId("workflow1");
+
+    HashMap<String, Object> variables = new HashMap<>();
+    variables.put("event", new EventHolder<>());
+
+    // Act
+    requestReceivedEventProcessor.processEventSource(eventSource, variables);
+
+    // Assert
+    verify(runtimeService).createSignalEvent("request-received_workflow1");
+    verify(commandExecutor).execute(isA(Command.class));
+    Object getResult = variables.get("event");
+    assertTrue(getResult instanceof EventHolder);
+    Map<String, Object> args = ((EventHolder<Object>) getResult).getArgs();
+    assertEquals(1, args.size());
+    assertEquals("request-received_workflow1", args.get(RealTimeEventProcessor.EVENT_NAME_KEY));
   }
 }
