@@ -946,6 +946,54 @@ class WorkflowsMgtApiControllerDiffblueTest {
   }
 
   /**
+   * Test {@link WorkflowsMgtApiController#deleteWorkflowByIdAndVersion(String, String, Long)}.
+   *
+   * <ul>
+   *   <li>When version is {@code null}, then calls {@link WorkflowManagementService#delete(String)}.
+   * </ul>
+   *
+   * <p>Method under test: {@link WorkflowsMgtApiController#deleteWorkflowByIdAndVersion(String,
+   * String, Long)}
+   */
+  @Test
+  @DisplayName(
+      "Test deleteWorkflowByIdAndVersion(String, String, Long); given null version, then calls delete(String)")
+  void testDeleteWorkflowByIdAndVersion_givenNullVersion_thenCallsDeleteWithoutVersion() {
+    // Arrange
+    WorkflowManagementService workflowManagementService = mock(WorkflowManagementService.class);
+    doNothing().when(workflowManagementService).delete(Mockito.<String>any());
+    WorkflowExpirationService workflowExpirationService =
+        new WorkflowExpirationService(
+            mock(WorkflowExpirationJobRepository.class),
+            mock(VersionedWorkflowRepository.class),
+            mock(WorkflowExpirationPlanner.class));
+    LogsStreamingService logsStreamingService = new LogsStreamingService();
+    SecretRepository repository = mock(SecretRepository.class);
+    DefaultSecretKeeper secretKeeper = new DefaultSecretKeeper(repository, new SecretCryptVault());
+
+    WorkflowsMgtApiController workflowsMgtApiController =
+        new WorkflowsMgtApiController(
+            workflowManagementService,
+            workflowExpirationService,
+            logsStreamingService,
+            secretKeeper);
+
+    // Act
+    ResponseEntity<Void> actualDeleteWorkflowByIdAndVersionResult =
+        workflowsMgtApiController.deleteWorkflowByIdAndVersion("ABC123", "42", null);
+
+    // Assert
+    verify(workflowManagementService).delete("42");
+    HttpStatusCode statusCode = actualDeleteWorkflowByIdAndVersionResult.getStatusCode();
+    assertTrue(statusCode instanceof HttpStatus);
+    assertNull(actualDeleteWorkflowByIdAndVersionResult.getBody());
+    assertEquals(204, actualDeleteWorkflowByIdAndVersionResult.getStatusCodeValue());
+    assertEquals(HttpStatus.NO_CONTENT, statusCode);
+    assertFalse(actualDeleteWorkflowByIdAndVersionResult.hasBody());
+    assertTrue(actualDeleteWorkflowByIdAndVersionResult.getHeaders().isEmpty());
+  }
+
+  /**
    * Test {@link WorkflowsMgtApiController#setVersionAndExpirationTime(String, String, Long,
    * Instant)}.
    *
