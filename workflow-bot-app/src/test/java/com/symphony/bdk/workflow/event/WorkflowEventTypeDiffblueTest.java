@@ -32,6 +32,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class WorkflowEventTypeDiffblueTest {
   /**
@@ -154,5 +155,48 @@ class WorkflowEventTypeDiffblueTest {
     // Assert
     assertEquals(WorkflowEventType.MESSAGE_RECEIVED, actualEventType.get());
     assertTrue(actualEventType.isPresent());
+  }
+
+  /**
+   * Test {@link WorkflowEventType#getEventType(Event)} with no matching event type.
+   *
+   * <p>Method under test: {@link WorkflowEventType#getEventType(Event)}
+   */
+  @Test
+  @DisplayName("Test getEventType(Event) with no matching event type returns empty Optional")
+  @Tag("ContributionFromDiffblue")
+  void testGetEventType_noMatch() {
+    // Arrange
+    Event event = new Event();
+
+    // Act
+    Optional<WorkflowEventType> actualEventType = WorkflowEventType.getEventType(event);
+
+    // Assert
+    assertFalse(actualEventType.isPresent());
+  }
+
+  /**
+   * Test {@link WorkflowEventType#getEventType(Event)} with a message suppressed event.
+   *
+   * <p>Method under test: {@link WorkflowEventType#getEventType(Event)}
+   */
+  @Test
+  @DisplayName("Test getEventType(Event) with MessageSuppressed event returns MESSAGE_SUPPRESSED")
+  @Tag("ContributionFromDiffblue")
+  void testGetEventType_messageSuppressed() {
+    // Arrange
+    MessageSuppressedEvent messageSuppressed = new MessageSuppressedEvent();
+    messageSuppressed.setId("42");
+
+    Event event = new Event();
+    event.setMessageSuppressed(messageSuppressed);
+
+    // Act
+    Optional<WorkflowEventType> actualEventType = WorkflowEventType.getEventType(event);
+
+    // Assert
+    assertTrue(actualEventType.isPresent());
+    assertEquals(WorkflowEventType.MESSAGE_SUPPRESSED, actualEventType.get());
   }
 }
