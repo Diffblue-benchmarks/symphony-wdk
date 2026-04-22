@@ -2,6 +2,7 @@ package com.symphony.bdk.workflow.engine.camunda.bpmn.builder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.mock;
@@ -9,12 +10,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
+import com.symphony.bdk.workflow.DoSomething;
+import com.symphony.bdk.workflow.engine.WorkflowNode;
 import com.symphony.bdk.workflow.engine.WorkflowNodeType;
+import com.symphony.bdk.workflow.engine.camunda.CamundaExecutor;
+import com.symphony.bdk.workflow.engine.camunda.bpmn.BuildProcessContext;
 import com.symphony.bdk.workflow.swadl.v1.activity.BaseActivity;
 import com.symphony.bdk.workflow.swadl.v1.activity.ExecuteScript;
 import javax.imageio.metadata.IIOMetadataNode;
 import org.camunda.bpm.model.bpmn.builder.AbstractFlowNodeBuilder;
 import org.camunda.bpm.model.bpmn.builder.ScriptTaskBuilder;
+import org.camunda.bpm.model.bpmn.builder.ServiceTaskBuilder;
 import org.camunda.bpm.model.bpmn.impl.BpmnModelInstanceImpl;
 import org.camunda.bpm.model.bpmn.impl.instance.ScriptTaskImpl;
 import org.camunda.bpm.model.xml.impl.ModelBuilderImpl;
@@ -124,5 +130,129 @@ class ActivityNodeBuilderDiffblueTest {
     verify(scriptTaskBuilder3).scriptFormat("groovy");
     verify(scriptTaskBuilder4).scriptText(null);
     assertSame(scriptTaskBuilder2, actualAddTaskResult);
+  }
+
+  /**
+   * Test {@link ActivityNodeBuilder#build(WorkflowNode, String, AbstractFlowNodeBuilder, BuildProcessContext)}.
+   *
+   * <p>Method under test: {@link ActivityNodeBuilder#build(WorkflowNode, String,
+   * AbstractFlowNodeBuilder, BuildProcessContext)}
+   */
+  @Test
+  @DisplayName("Test build(WorkflowNode, String, AbstractFlowNodeBuilder, BuildProcessContext)")
+  void testBuild() {
+    // Arrange
+    ScriptTaskBuilder scriptTaskBuilder = mock(ScriptTaskBuilder.class);
+    ModelImpl model = new ModelImpl("Model Name");
+    ModelBuilderImpl modelBuilder = new ModelBuilderImpl("Model Name");
+
+    BpmnModelInstanceImpl modelInstance =
+        new BpmnModelInstanceImpl(model, modelBuilder, new DomDocumentImpl(null));
+    DomElementImpl domElement = new DomElementImpl(new IIOMetadataNode());
+    ModelImpl model2 = new ModelImpl("Model Name");
+    ModelBuilderImpl modelBuilder2 = new ModelBuilderImpl("Model Name");
+
+    ModelInstanceImpl model3 =
+        new ModelInstanceImpl(model2, modelBuilder2, new DomDocumentImpl(null));
+    ModelImpl model4 = new ModelImpl("Model Name");
+    Class<ModelElementInstance> instanceType = ModelElementInstance.class;
+
+    ModelElementTypeImpl modelType = new ModelElementTypeImpl(model4, "Name", instanceType);
+
+    ModelTypeInstanceContext context = new ModelTypeInstanceContext(domElement, model3, modelType);
+    ScriptTaskBuilder scriptTaskBuilder2 =
+        new ScriptTaskBuilder(modelInstance, new ScriptTaskImpl(context));
+    when(scriptTaskBuilder.camundaExecutionListenerClass(
+            Mockito.<String>any(), Mockito.<Class<Object>>any()))
+        .thenReturn(scriptTaskBuilder2);
+
+    ScriptTaskBuilder scriptTaskBuilder3 = mock(ScriptTaskBuilder.class);
+    when(scriptTaskBuilder3.scriptFormat(Mockito.<String>any())).thenReturn(scriptTaskBuilder);
+
+    ScriptTaskBuilder scriptTaskBuilder4 = mock(ScriptTaskBuilder.class);
+    when(scriptTaskBuilder4.scriptText(Mockito.<String>any())).thenReturn(scriptTaskBuilder3);
+
+    ScriptTaskBuilder scriptTaskBuilder5 = mock(ScriptTaskBuilder.class);
+    when(scriptTaskBuilder5.camundaAsyncAfter()).thenReturn(scriptTaskBuilder4);
+
+    ScriptTaskBuilder scriptTaskBuilder6 = mock(ScriptTaskBuilder.class);
+    when(scriptTaskBuilder6.name(Mockito.<String>any())).thenReturn(scriptTaskBuilder5);
+
+    ScriptTaskBuilder scriptTaskBuilder7 = mock(ScriptTaskBuilder.class);
+    when(scriptTaskBuilder7.id(Mockito.<String>any())).thenReturn(scriptTaskBuilder6);
+
+    AbstractFlowNodeBuilder<?, ?> eventBuilder = mock(AbstractFlowNodeBuilder.class);
+    when(eventBuilder.scriptTask()).thenReturn(scriptTaskBuilder7);
+
+    WorkflowNode element = new WorkflowNode();
+    element.activity(new ExecuteScript());
+
+    // Act
+    AbstractFlowNodeBuilder<?, ?> actualBuildResult =
+        activityNodeBuilder.build(element, "parentId", eventBuilder, null);
+
+    // Assert
+    verify(scriptTaskBuilder7).id(null);
+    verify(scriptTaskBuilder6).name(null);
+    verify(scriptTaskBuilder5).camundaAsyncAfter();
+    verify(scriptTaskBuilder).camundaExecutionListenerClass(eq("start"), isA(Class.class));
+    verify(eventBuilder).scriptTask();
+    verify(scriptTaskBuilder3).scriptFormat("groovy");
+    verify(scriptTaskBuilder4).scriptText(null);
+    assertSame(scriptTaskBuilder2, actualBuildResult);
+  }
+
+  /**
+   * Test {@link ActivityNodeBuilder#addTask(AbstractFlowNodeBuilder, BaseActivity)} with a
+   * non-script activity, exercising the service task path.
+   *
+   * <p>Method under test: {@link ActivityNodeBuilder#addTask(AbstractFlowNodeBuilder, BaseActivity)}
+   */
+  @Test
+  @DisplayName("Test addTask(AbstractFlowNodeBuilder, BaseActivity) with service task")
+  void testAddTask_withServiceTask() {
+    // Arrange
+    ServiceTaskBuilder serviceTaskBuilder = mock(ServiceTaskBuilder.class);
+    when(serviceTaskBuilder.camundaInputParameter(
+            eq(CamundaExecutor.ACTIVITY), Mockito.<String>any()))
+        .thenReturn(serviceTaskBuilder);
+
+    ServiceTaskBuilder serviceTaskBuilder2 = mock(ServiceTaskBuilder.class);
+    when(serviceTaskBuilder2.camundaInputParameter(
+            eq(CamundaExecutor.EXECUTOR), Mockito.<String>any()))
+        .thenReturn(serviceTaskBuilder);
+
+    ServiceTaskBuilder serviceTaskBuilder3 = mock(ServiceTaskBuilder.class);
+    when(serviceTaskBuilder3.camundaClass(Mockito.<Class<Object>>any()))
+        .thenReturn(serviceTaskBuilder2);
+
+    ServiceTaskBuilder serviceTaskBuilder4 = mock(ServiceTaskBuilder.class);
+    when(serviceTaskBuilder4.camundaAsyncAfter()).thenReturn(serviceTaskBuilder3);
+
+    ServiceTaskBuilder serviceTaskBuilder5 = mock(ServiceTaskBuilder.class);
+    when(serviceTaskBuilder5.name(Mockito.<String>any())).thenReturn(serviceTaskBuilder4);
+
+    ServiceTaskBuilder serviceTaskBuilder6 = mock(ServiceTaskBuilder.class);
+    when(serviceTaskBuilder6.id(Mockito.<String>any())).thenReturn(serviceTaskBuilder5);
+
+    AbstractFlowNodeBuilder<?, ?> eventBuilder = mock(AbstractFlowNodeBuilder.class);
+    when(eventBuilder.serviceTask()).thenReturn(serviceTaskBuilder6);
+
+    DoSomething activity = new DoSomething();
+    activity.setId("doSomethingId");
+
+    // Act
+    AbstractFlowNodeBuilder<?, ?> actualAddTaskResult =
+        activityNodeBuilder.addTask(eventBuilder, activity);
+
+    // Assert
+    verify(eventBuilder).serviceTask();
+    verify(serviceTaskBuilder6).id("doSomethingId");
+    verify(serviceTaskBuilder5).name("doSomethingId");
+    verify(serviceTaskBuilder4).camundaAsyncAfter();
+    verify(serviceTaskBuilder3).camundaClass(isA(Class.class));
+    verify(serviceTaskBuilder2).camundaInputParameter(eq(CamundaExecutor.EXECUTOR), any());
+    verify(serviceTaskBuilder).camundaInputParameter(eq(CamundaExecutor.ACTIVITY), eq("doSomethingId"));
+    assertSame(serviceTaskBuilder, actualAddTaskResult);
   }
 }
