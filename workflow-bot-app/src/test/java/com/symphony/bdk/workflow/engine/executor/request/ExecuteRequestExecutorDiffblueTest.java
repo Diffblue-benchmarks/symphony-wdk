@@ -17,7 +17,9 @@ import com.symphony.bdk.workflow.engine.executor.request.client.HttpClient;
 import com.symphony.bdk.workflow.engine.executor.request.client.Response;
 import com.symphony.bdk.workflow.swadl.v1.activity.request.ExecuteRequest;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -191,6 +193,58 @@ class ExecuteRequestExecutorDiffblueTest {
     assertThrows(IOException.class, () -> executeRequestExecutor.execute(execution));
     verify(execution).getActivity();
     verify(httpClient).execute(eq("GET"), isNull(), isNull(), isA(Map.class));
+  }
+
+  /**
+   * Test {@link ExecuteRequestExecutor#execute(ActivityExecutorContext)}.
+   *
+   * <ul>
+   *   <li>Given headers contain a {@link List} value.
+   *   <li>Then joins header list values with a comma.
+   * </ul>
+   *
+   * <p>Method under test: {@link ExecuteRequestExecutor#execute(ActivityExecutorContext)}
+   */
+  @Test
+  @DisplayName(
+      "Test execute(ActivityExecutorContext); given headers contain a List value; then joins header values with comma")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({"void ExecuteRequestExecutor.execute(ActivityExecutorContext)"})
+  void testExecute_givenHeadersWithListValue_thenJoinsHeaderValues() throws IOException {
+    // Arrange
+    when(httpClient.execute(
+            Mockito.<String>any(),
+            Mockito.<String>any(),
+            Mockito.<Object>any(),
+            Mockito.<Map<String, String>>any()))
+        .thenReturn(new Response(1, "Content"));
+
+    HashMap<String, Object> headers = new HashMap<>();
+    headers.put("Accept", Arrays.asList("application/json", "text/plain"));
+
+    ExecuteRequest executeRequest = mock(ExecuteRequest.class);
+    when(executeRequest.isEncodeQueryParams()).thenReturn(false);
+    when(executeRequest.getBody()).thenReturn("Body");
+    when(executeRequest.getMethod()).thenReturn("GET");
+    when(executeRequest.getUrl()).thenReturn("https://example.org/example");
+    when(executeRequest.getHeaders()).thenReturn(headers);
+
+    ActivityExecutorContext<ExecuteRequest> execution = mock(ActivityExecutorContext.class);
+    doNothing().when(execution).setOutputVariables(Mockito.<Map<String, Object>>any());
+    when(execution.getActivity()).thenReturn(executeRequest);
+
+    // Act
+    executeRequestExecutor.execute(execution);
+
+    // Assert
+    verify(execution).setOutputVariables(isA(Map.class));
+    verify(httpClient)
+        .execute(
+            eq("GET"),
+            eq("https://example.org/example"),
+            isA(Object.class),
+            isA(Map.class));
   }
 
   /**
