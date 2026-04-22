@@ -1,8 +1,10 @@
 package com.symphony.bdk.workflow.management.converter;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
+import com.symphony.bdk.workflow.swadl.v1.Workflow;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -100,5 +102,29 @@ class WorkflowVersionConverterDiffblueTest {
   void testApplyWithStringLong_whenNull() {
     // Arrange, Act and Assert
     assertThrows(IllegalArgumentException.class, () -> workflowVersionConverter.apply(null, 1L));
+  }
+
+  /**
+   * Test {@link WorkflowVersionConverter#apply(String, Long)} with {@code String}, {@code Long}.
+   *
+   * <ul>
+   *   <li>When valid SWADL YAML string, returns workflow with version set.
+   * </ul>
+   *
+   * <p>Method under test: {@link WorkflowVersionConverter#apply(String, Long)}
+   */
+  @Test
+  @DisplayName("Test apply(String, Long) with valid SWADL YAML; returns Workflow with version set")
+  void testApplyWithStringLong_whenValidSwadl_returnsWorkflowWithVersion() {
+    // Arrange
+    String validYaml = "id: test-workflow\nactivities:\n  - execute-script:\n      id: step1\n      on:\n        message-received:\n          content: /start\n      script: |\n        'hello'\n";
+    Long version = 42L;
+
+    // Act
+    Workflow result = workflowVersionConverter.apply(validYaml, version);
+
+    // Assert
+    assertEquals("test-workflow", result.getId());
+    assertEquals(version, result.getVersion());
   }
 }
