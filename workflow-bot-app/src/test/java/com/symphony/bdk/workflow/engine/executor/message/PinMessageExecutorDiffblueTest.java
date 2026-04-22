@@ -1,13 +1,26 @@
 package com.symphony.bdk.workflow.engine.executor.message;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
+import com.symphony.bdk.core.OboServices;
+import com.symphony.bdk.core.auth.AuthSession;
+import com.symphony.bdk.core.service.message.MessageService;
+import com.symphony.bdk.core.service.stream.OboStreamService;
+import com.symphony.bdk.core.service.stream.StreamService;
+import com.symphony.bdk.gen.api.model.V1IMAttributes;
+import com.symphony.bdk.gen.api.model.V3RoomAttributes;
+import com.symphony.bdk.gen.api.model.V4Message;
+import com.symphony.bdk.gen.api.model.V4Stream;
 import com.symphony.bdk.workflow.engine.executor.ActivityExecutorContext;
+import com.symphony.bdk.workflow.engine.executor.BdkGateway;
+import com.symphony.bdk.workflow.swadl.v1.activity.Obo;
 import com.symphony.bdk.workflow.swadl.v1.activity.message.PinMessage;
 import java.io.IOException;
 import org.junit.jupiter.api.DisplayName;

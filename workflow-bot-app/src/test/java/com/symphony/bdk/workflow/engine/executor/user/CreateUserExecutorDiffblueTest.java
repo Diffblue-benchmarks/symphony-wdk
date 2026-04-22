@@ -4,15 +4,32 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.diffblue.cover.annotations.ManagedByDiffblue;
 import com.diffblue.cover.annotations.MethodsUnderTest;
+import com.symphony.bdk.core.auth.AuthenticatorFactory;
+import com.symphony.bdk.core.config.model.BdkConfig;
+import com.symphony.bdk.core.service.connection.ConnectionService;
+import com.symphony.bdk.core.service.message.MessageService;
+import com.symphony.bdk.core.service.session.SessionService;
+import com.symphony.bdk.core.service.stream.StreamService;
+import com.symphony.bdk.core.service.user.UserService;
+import com.symphony.bdk.ext.group.SymphonyGroupService;
 import com.symphony.bdk.gen.api.model.Feature;
+import com.symphony.bdk.gen.api.model.UserStatus;
 import com.symphony.bdk.gen.api.model.V2UserAttributes;
+import com.symphony.bdk.gen.api.model.V2UserCreate;
+import com.symphony.bdk.gen.api.model.V2UserDetail;
 import com.symphony.bdk.gen.api.model.V2UserKeyRequest;
+import com.symphony.bdk.gen.api.model.UserSystemInfo;
+import com.symphony.bdk.workflow.engine.SpringBdkGateway;
+import com.symphony.bdk.workflow.engine.executor.ActivityExecutorContext;
 import com.symphony.bdk.workflow.swadl.v1.activity.user.CreateUser;
 import com.symphony.bdk.workflow.swadl.v1.activity.user.CreateUser.Business;
 import com.symphony.bdk.workflow.swadl.v1.activity.user.CreateUser.Contact;
@@ -25,6 +42,7 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 class CreateUserExecutorDiffblueTest {
   /**
@@ -437,5 +455,131 @@ class CreateUserExecutorDiffblueTest {
 
     // Assert
     assertTrue(actualToFeaturesResult.isEmpty());
+  }
+
+  /**
+   * Test {@link CreateUserExecutor#execute(ActivityExecutorContext)}.
+   *
+   * <ul>
+   *   <li>Given a basic {@link CreateUser} with no entitlements and no status.
+   *   <li>Then calls {@link UserService#getUserDetail(Long)}.
+   * </ul>
+   *
+   * <p>Method under test: {@link CreateUserExecutor#execute(ActivityExecutorContext)}
+   */
+  @Test
+  @DisplayName(
+      "Test execute(ActivityExecutorContext); given CreateUser with no entitlements and no status; then calls getUserDetail(Long)")
+  @Tag("ContributionFromDiffblue")
+  @MethodsUnderTest({"void CreateUserExecutor.execute(ActivityExecutorContext)"})
+  void testExecute_givenBasicCreateUser_thenCallsGetUserDetail() {
+    // Arrange
+    CreateUserExecutor createUserExecutor = new CreateUserExecutor();
+
+    UserSystemInfo userSystemInfo = mock(UserSystemInfo.class);
+    when(userSystemInfo.getId()).thenReturn(42L);
+
+    V2UserDetail createdUser = mock(V2UserDetail.class);
+    when(createdUser.getUserSystemInfo()).thenReturn(userSystemInfo);
+
+    UserService userService = mock(UserService.class);
+    when(userService.create(Mockito.<V2UserCreate>any())).thenReturn(createdUser);
+    when(userService.getUserDetail(Mockito.<Long>any())).thenReturn(new V2UserDetail());
+
+    SpringBdkGateway springBdkGateway =
+        new SpringBdkGateway(
+            mock(BdkConfig.class),
+            mock(AuthenticatorFactory.class),
+            mock(MessageService.class),
+            mock(StreamService.class),
+            userService,
+            mock(ConnectionService.class),
+            mock(SymphonyGroupService.class),
+            mock(SessionService.class));
+
+    CreateUser createUser = new CreateUser();
+
+    ActivityExecutorContext<CreateUser> context = mock(ActivityExecutorContext.class);
+    doNothing().when(context).setOutputVariable(Mockito.<String>any(), Mockito.<Object>any());
+    when(context.getActivity()).thenReturn(createUser);
+    when(context.bdk()).thenReturn(springBdkGateway);
+
+    // Act
+    createUserExecutor.execute(context);
+
+    // Assert
+    verify(userService).create(isA(V2UserCreate.class));
+    verify(userService).getUserDetail(42L);
+    verify(context).bdk();
+    verify(context).getActivity();
+    verify(context).setOutputVariable(eq("user"), isA(Object.class));
+  }
+
+  /**
+   * Test {@link CreateUserExecutor#execute(ActivityExecutorContext)}.
+   *
+   * <ul>
+   *   <li>Given a {@link CreateUser} with entitlements and status set.
+   *   <li>Then calls {@link UserService#updateFeatureEntitlements(Long, List)} and
+   *       {@link UserService#updateStatus(Long, UserStatus)}.
+   * </ul>
+   *
+   * <p>Method under test: {@link CreateUserExecutor#execute(ActivityExecutorContext)}
+   */
+  @Test
+  @DisplayName(
+      "Test execute(ActivityExecutorContext); given CreateUser with entitlements and status; then calls updateFeatureEntitlements and updateStatus")
+  @Tag("ContributionFromDiffblue")
+  @MethodsUnderTest({"void CreateUserExecutor.execute(ActivityExecutorContext)"})
+  void testExecute_givenCreateUserWithEntitlementsAndStatus_thenCallsUpdateFeatureEntitlementsAndUpdateStatus() {
+    // Arrange
+    CreateUserExecutor createUserExecutor = new CreateUserExecutor();
+
+    UserSystemInfo userSystemInfo = mock(UserSystemInfo.class);
+    when(userSystemInfo.getId()).thenReturn(42L);
+
+    V2UserDetail createdUser = mock(V2UserDetail.class);
+    when(createdUser.getUserSystemInfo()).thenReturn(userSystemInfo);
+
+    UserService userService = mock(UserService.class);
+    when(userService.create(Mockito.<V2UserCreate>any())).thenReturn(createdUser);
+    doNothing().when(userService).updateFeatureEntitlements(Mockito.<Long>any(), Mockito.<List>any());
+    doNothing().when(userService).updateStatus(Mockito.<Long>any(), Mockito.<UserStatus>any());
+    when(userService.getUserDetail(Mockito.<Long>any())).thenReturn(new V2UserDetail());
+
+    SpringBdkGateway springBdkGateway =
+        new SpringBdkGateway(
+            mock(BdkConfig.class),
+            mock(AuthenticatorFactory.class),
+            mock(MessageService.class),
+            mock(StreamService.class),
+            userService,
+            mock(ConnectionService.class),
+            mock(SymphonyGroupService.class),
+            mock(SessionService.class));
+
+    HashMap<String, Boolean> entitlements = new HashMap<>();
+    entitlements.put("canCreatePublicRoom", true);
+
+    CreateUser createUser = new CreateUser();
+    createUser.setEntitlements(entitlements);
+    createUser.setStatus("ENABLED");
+
+    ActivityExecutorContext<CreateUser> context = mock(ActivityExecutorContext.class);
+    doNothing().when(context).setOutputVariable(Mockito.<String>any(), Mockito.<Object>any());
+    when(context.getActivity()).thenReturn(createUser);
+    when(context.bdk()).thenReturn(springBdkGateway);
+
+    // Act
+    createUserExecutor.execute(context);
+
+    // Assert
+    verify(userService).create(isA(V2UserCreate.class));
+    verify(userService).updateFeatureEntitlements(eq(42L), isA(List.class));
+    verify(userService).updateStatus(eq(42L), isA(UserStatus.class));
+    verify(userService).getUserDetail(42L);
+    verify(context).bdk();
+    verify(context).getActivity();
+    verify(context).setOutputVariable(eq("user"), isA(Object.class));
   }
 }
