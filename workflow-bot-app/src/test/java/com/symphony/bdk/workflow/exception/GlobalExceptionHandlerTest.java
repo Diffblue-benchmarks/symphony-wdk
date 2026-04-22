@@ -3,8 +3,16 @@ package com.symphony.bdk.workflow.exception;
 import com.symphony.bdk.workflow.api.v1.dto.ErrorResponse;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.validation.BindException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.context.request.ServletWebRequest;
+
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -70,5 +78,26 @@ class GlobalExceptionHandlerTest {
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     assertThat(response.getBody()).isEqualTo(expectedErrorResponse);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void testHandleMethodArgumentNotValid() {
+    // Arrange
+    BindException bindException = new BindException("Target", "objectName");
+    bindException.addError(new FieldError("objectName", "fieldName", "must not be blank"));
+    MethodArgumentNotValidException ex = new MethodArgumentNotValidException(null, bindException);
+    HttpHeaders headers = new HttpHeaders();
+    ServletWebRequest request = new ServletWebRequest(new MockHttpServletRequest());
+
+    // Act
+    ResponseEntity<Object> response = globalExceptionHandler.handleMethodArgumentNotValid(
+        ex, headers, HttpStatus.BAD_REQUEST, request);
+
+    // Assert
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getBody()).isInstanceOf(Map.class);
+    Map<String, String> errors = (Map<String, String>) response.getBody();
+    assertThat(errors).containsEntry("fieldName", "must not be blank");
   }
 }
