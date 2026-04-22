@@ -193,4 +193,49 @@ class OboExecutorDiffblueTest {
     verify(execution).getActivity();
     assertSame(authSessionImpl, actualOboAuthSession);
   }
+
+  /**
+   * Test {@link OboExecutor#getOboAuthSession(ActivityExecutorContext)}.
+   *
+   * <ul>
+   *   <li>Given {@link Obo} (default constructor) Username is {@code null}.
+   *   <li>Then call {@code bdk().obo(userId)}.
+   * </ul>
+   *
+   * <p>Method under test: {@link OboExecutor#getOboAuthSession(ActivityExecutorContext)}
+   */
+  @Test
+  @DisplayName(
+      "Test getOboAuthSession(ActivityExecutorContext); given Obo Username is 'null'; then call obo(Long)")
+  @Tag("ContributionFromDiffblue")
+  @ManagedByDiffblue
+  @MethodsUnderTest({"AuthSession OboExecutor.getOboAuthSession(ActivityExecutorContext)"})
+  void testGetOboAuthSession_givenOboUsernameIsNull_thenCallOboWithUserId() {
+    // Arrange
+    AcceptConnectionExecutor acceptConnectionExecutor = new AcceptConnectionExecutor();
+
+    Obo obo = new Obo();
+    obo.setUserId(1L);
+    obo.setUsername(null);
+
+    AcceptConnection acceptConnection = new AcceptConnection();
+    acceptConnection.setObo(obo);
+
+    SpringBdkGateway springBdkGateway = mock(SpringBdkGateway.class);
+    AuthSessionImpl authSessionImpl = new AuthSessionImpl(null);
+    when(springBdkGateway.obo(Mockito.<Long>any())).thenReturn(authSessionImpl);
+
+    ActivityExecutorContext<AcceptConnection> execution = mock(ActivityExecutorContext.class);
+    when(execution.bdk()).thenReturn(springBdkGateway);
+    when(execution.getActivity()).thenReturn(acceptConnection);
+
+    // Act
+    AuthSession actualOboAuthSession = acceptConnectionExecutor.getOboAuthSession(execution);
+
+    // Assert
+    verify(springBdkGateway).obo(1L);
+    verify(execution).bdk();
+    verify(execution).getActivity();
+    assertSame(authSessionImpl, actualOboAuthSession);
+  }
 }
