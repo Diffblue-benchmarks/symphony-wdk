@@ -4,6 +4,7 @@ import com.symphony.bdk.workflow.management.repository.domain.VersionedWorkflow;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -121,5 +122,34 @@ public class VersionedWorkflowRepositoryTest {
     Optional<VersionedWorkflow> workflows = versionedWorkflowRepository.findTopByWorkflowIdOrderByVersionDesc("id1");
     assertThat(workflows).isNotEmpty();
     assertThat(workflows.get().getVersion()).isEqualTo(V3);
+  }
+
+  @Test
+  @DisplayName("deleteByWorkflowId removes all versions for the given workflow id")
+  void testDeleteByWorkflowId() {
+    // Arrange
+    assertThat(versionedWorkflowRepository.findByWorkflowId("id1")).hasSize(3);
+
+    // Act
+    versionedWorkflowRepository.deleteByWorkflowId("id1");
+
+    // Assert
+    assertThat(versionedWorkflowRepository.findByWorkflowId("id1")).isEmpty();
+    assertThat(versionedWorkflowRepository.findByWorkflowId("id2")).hasSize(1);
+  }
+
+  @Test
+  @DisplayName("deleteByWorkflowIdAndVersion removes only the specified version")
+  void testDeleteByWorkflowIdAndVersion() {
+    // Arrange
+    assertThat(versionedWorkflowRepository.findByWorkflowId("id1")).hasSize(3);
+
+    // Act
+    versionedWorkflowRepository.deleteByWorkflowIdAndVersion("id1", V1);
+
+    // Assert
+    List<VersionedWorkflow> remaining = versionedWorkflowRepository.findByWorkflowId("id1");
+    assertThat(remaining).hasSize(2);
+    assertThat(remaining).noneMatch(w -> w.getVersion().equals(V1));
   }
 }
