@@ -40,6 +40,12 @@ test {
     }
 }
 
+jacocoTestReport {
+    reports {
+        xml.required = true
+    }
+}
+
 check.dependsOn javadoc
 
 checkstyle {
