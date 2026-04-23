@@ -1,0 +1,10 @@
+id: workflow has spaces in name
+activities:
+  - send-message:
+      id: sendMsg1
+      on:
+        message-received:
+          content: "/message"
+      to:
+        stream-id: "123"
+      content: <messageML>Hello!</messageML>

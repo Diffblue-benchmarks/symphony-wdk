@@ -1,0 +1,100 @@
+plugins {
+    id 'java'
+    id 'io.freefair.lombok'
+    id 'jacoco'
+
+    // code quality
+    id 'checkstyle'
+    id 'com.github.spotbugs'
+
+    // deployment
+    id 'maven-publish'
+    id 'signing'
+}
+
+repositories {
+    mavenCentral()
+}
+
+compileJava {
+    options.compilerArgs << '-parameters'
+    options.compilerArgs << '-Xlint:deprecation'
+    options.compilerArgs << '-Xlint:unchecked'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+
+    withJavadocJar()
+    withSourcesJar()
+}
+
+javadoc.options.addStringOption('Xdoclint:none', '-quiet')
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        exceptionFormat = 'full'
+    }
+}
+
+check.dependsOn javadoc
+
+checkstyle {
+    configFile = rootProject.file("checkstyle.xml")
+    toolVersion '10.13.0'
+}
+
+configurations.checkstyle {
+    resolutionStrategy.capabilitiesResolution.withCapability("com.google.collections:google-collections") {
+        select("com.google.guava:guava:0")
+    }
+}
+
+spotbugs {
+    toolVersion = '4.8.3'
+    ignoreFailures = true
+}
+
+// Enable HTML report for spotbugs
+tasks.matching { task -> task.name.startsWith('spotbugs') }.forEach {
+    it.excludeFilter = rootProject.file("spotbugs.xml")
+    it.reports {
+        html.enabled = true
+        xml.enabled = false
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from(components.java)
+            pom(rootProject.ext.pomDefinition)
+            pom.withXml {
+                // otherwise project description is evaluated too early
+                asNode().children().first().plus {
+                    setResolveStrategy(Closure.DELEGATE_FIRST)
+                    'name' project.name
+                    'description' project.description
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            credentials {
+                username rootProject.ext.mavenRepoUsername ?: 'Symphony artifactory user'
+                password rootProject.ext.mavenRepoPassword ?: 'Symphony artifactory password'
+            }
+            url = rootProject.ext.mavenRepoUrl
+        }
+    }
+}
+
+signing {
+    required { !rootProject.ext.projectVersion.endsWith('SNAPSHOT') }
+    sign publishing.publications.maven
+}

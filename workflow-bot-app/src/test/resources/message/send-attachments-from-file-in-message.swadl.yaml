@@ -1,0 +1,14 @@
+id: send-attachment-from-file-in-message
+activities:
+  - send-message:
+      id: sendAttachmentFromFileInMessageId
+      on:
+        message-received:
+          content: /send-attachment-from-file
+      to:
+        stream-id: "123"
+      content: <messageML>here is a msg with attachment</messageML>
+      attachments:
+        - content-path: "/attachments/attachment-text.txt"
+        - content-path: "/attachments/logo.png"
+

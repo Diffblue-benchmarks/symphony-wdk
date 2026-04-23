@@ -1,0 +1,34 @@
+# WDK configuration
+wdk:
+#  workflows:
+#    path: false
+  encrypt:
+    passphrase: this is my secret
+  properties:
+    monitoring-token: token # The default value is an empty String
+#    management-token: token
+
+# BDK configuration for local development
+bdk:
+  host: xxx
+  bot:
+    username: xxx
+    privateKey:
+      path: xxx
+
+spring:
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    org.camunda.bpm.engine.bpmn.parser: DEBUG
+    org.camunda.bpm.engine.bpmn.behavior: DEBUG
+    org.camunda.bpm.engine.dmn: DEBUG
+    org.camunda.bpm.engine.pvm: DEBUG
+    org.camunda.bpm.dmn.feel: DEBUG
+    org.camunda.bpm.engine.script: DEBUG
+    org.camunda.bpm: OFF
+    com.symphony.bdk.workflow.engine.camunda.bpmn.CamundaBpmnBuilder: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE

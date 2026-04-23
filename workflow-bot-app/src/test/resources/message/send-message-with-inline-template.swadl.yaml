@@ -1,0 +1,13 @@
+id: sendMessageWithTemplate
+variables:
+  val: world
+activities:
+  - send-message:
+      id: sendMessageTemplateWithParams
+      content:
+        template: "Hello ${variables.val}!\n"
+      to:
+        stream-id: "123"
+      on:
+        message-received:
+          content: "/send-with-freemarker"

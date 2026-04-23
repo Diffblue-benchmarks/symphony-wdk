@@ -1,0 +1,10 @@
+id: msg1-event
+activities:
+  - send-message:
+      id: one
+      on:
+        message-received:
+          content: /twoWorkflowsSameEvent
+      to:
+        stream-id: abc
+      content: msg1

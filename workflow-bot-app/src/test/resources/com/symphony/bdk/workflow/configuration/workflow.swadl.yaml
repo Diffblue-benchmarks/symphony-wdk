@@ -1,0 +1,10 @@
+id: send-message-workflow
+activities:
+  - send-message:
+      id: sendMessageId
+      on:
+        message-received:
+          content: "/message"
+      to:
+        stream-id: "123"
+      content: <messageML>Hello!</messageML>

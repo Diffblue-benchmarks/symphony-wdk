@@ -1,0 +1,24 @@
+plugins {
+    id 'workflow-bot.java-conventions'
+    id 'java-library'
+}
+
+javadoc {
+    options {
+        group = 'WDK Language' -> 'com.symphony.bdk.workflow*'
+    }
+}
+
+dependencies {
+    api platform('org.finos.symphony.bdk:symphony-bdk-bom:3.0.0')
+
+    api 'org.finos.symphony.bdk:symphony-bdk-core'
+    api 'org.finos.symphony.bdk.ext:symphony-group-extension'
+    api 'com.fasterxml.jackson.core:jackson-annotations'
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.13.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.13.4")
+    testImplementation("org.mockito:mockito-core:5.20.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.20.0")
+    compileOnly("com.diffblue.cover:cover-annotations:1.9.0")
+    testImplementation("com.diffblue.cover:cover-annotations:1.9.0")
+}

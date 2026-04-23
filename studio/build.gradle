@@ -1,0 +1,33 @@
+plugins {
+    id 'workflow-bot.java-conventions'
+}
+
+dependencies {
+    compileOnly project(':workflow-language')
+    compileOnly project(':workflow-bot-app')
+    compileOnly 'org.springframework:spring-tx'
+    implementation platform('org.finos.symphony.bdk:symphony-bdk-bom:3.0.0')
+    implementation 'org.finos.symphony.bdk:symphony-bdk-app-spring-boot-starter'
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.10.1")
+    testImplementation("org.mockito:mockito-core:5.7.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.8.0")
+    testImplementation("org.springframework:spring-test:6.1.3")
+    testImplementation("org.springframework.boot:spring-boot-test:3.2.2")
+    testImplementation("org.hamcrest:hamcrest:3.0")
+    compileOnly("com.diffblue.cover:cover-annotations:1.9.0")
+    testImplementation("com.diffblue.cover:cover-annotations:1.9.0")
+}
+
+tasks.register('customActivityLibs', Copy) {
+    description "Copies custom activity dependencies in lib folder."
+    from jar
+    from configurations.runtimeClasspath
+    into "lib"
+}
+tasks.register('removeExtraLibs', Delete) {
+    delete fileTree('lib').matching {
+        exclude 'studio*', 'symphony-bdk-app*'
+    }
+}
+tasks.removeExtraLibs.dependsOn tasks.customActivityLibs
+tasks.build.dependsOn tasks.removeExtraLibs

@@ -1,0 +1,8 @@
+id: custom-activity
+activities:
+  - do-something:
+      id: doIt
+      on:
+        message-received:
+          content: /execute
+      my-parameter: abc

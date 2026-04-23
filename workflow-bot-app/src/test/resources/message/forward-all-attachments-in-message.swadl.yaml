@@ -1,0 +1,13 @@
+id: forward-all-attachments-in-message
+activities:
+  - send-message:
+      id: forwardAll
+      on:
+        message-received:
+          content: /forward-all
+      to:
+        stream-id: "123"
+      content: <messageML>here is a msg with attachment</messageML>
+      attachments:
+        - message-id: "MSG_ID"
+

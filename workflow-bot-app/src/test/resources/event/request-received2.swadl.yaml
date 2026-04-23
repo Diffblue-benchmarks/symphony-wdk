@@ -1,0 +1,13 @@
+id: request-received2
+activities:
+  - send-message:
+      id: sendmsg
+      to:
+        stream-id: "123"
+      content: Second
+      on:
+        request-received:
+          token: myToken
+
+
+

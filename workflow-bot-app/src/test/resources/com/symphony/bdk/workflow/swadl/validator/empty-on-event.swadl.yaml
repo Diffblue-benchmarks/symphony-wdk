@@ -1,0 +1,6 @@
+id: test
+activities:
+  - send-message:
+      on:
+      id: 'a123'
+      content: "abc"

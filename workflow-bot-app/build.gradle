@@ -1,0 +1,126 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'workflow-bot.java-conventions'
+    id 'org.springframework.boot' version '3.2.2'
+}
+
+javadoc {
+    options {
+        group = 'WDK Bot App' -> 'com.symphony.bdk.workflow*'
+    }
+}
+
+dependencies {
+    implementation project(':workflow-language')
+
+    implementation platform('org.finos.symphony.bdk:symphony-bdk-bom:3.0.0') {
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+    }
+
+    implementation ('org.apache.httpcomponents.client5:httpclient5-fluent:5.3') {
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+    }
+    implementation 'org.finos.symphony.bdk:symphony-bdk-core-spring-boot-starter'
+    implementation 'org.finos.symphony.bdk.ext:symphony-group-extension'
+    implementation 'org.finos.symphony.bdk:symphony-bdk-template-freemarker'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+    runtimeOnly ('com.h2database:h2') {
+        version {
+            strictly '2.1.214'
+        }
+    }
+
+    implementation 'org.slf4j:slf4j-api'
+
+    implementation 'org.aspectj:aspectjrt:1.9.9.1'
+    implementation 'org.aspectj:aspectjweaver:1.9.9.1'
+
+    implementation platform('org.camunda.bpm:camunda-bom:7.20.0')
+    implementation 'org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter'
+    // used to serializable objects as variables
+    implementation 'org.camunda.bpm:camunda-engine-plugin-spin'
+    implementation 'org.camunda.spin:camunda-spin-core'
+    implementation 'org.camunda.spin:camunda-spin-dataformat-json-jackson'
+
+    implementation 'org.apache.groovy:groovy-all:4.0.17'
+
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
+    implementation 'com.github.java-json-tools:json-schema-validator:2.2.14'
+    implementation 'org.mozilla:rhino:1.7.14' // SNYK-JAVA-ORGMOZILLA-1314295
+
+    implementation 'org.apache.commons:commons-text'
+    implementation 'commons-io:commons-io'
+    implementation('org.reflections:reflections')
+
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+    implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.7.0'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation 'org.awaitility:awaitility'
+    testImplementation 'org.wiremock:wiremock-standalone:3.3.1'
+    testImplementation 'io.rest-assured:rest-assured:5.4.0'
+    testImplementation 'org.hamcrest:hamcrest-all:1.3'
+    testImplementation("org.camunda.community.mockito:camunda-platform-7-mockito:7.20.0") {
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+    }
+    testImplementation("org.junit.vintage:junit-vintage-engine:5.10.1")
+    compileOnly("com.diffblue.cover:cover-annotations:1.9.0")
+    testImplementation("com.diffblue.cover:cover-annotations:1.9.0")
+}
+
+bootJar {
+    archiveClassifier = 'boot'
+    manifest {
+        // to be able to use loader.path to add custom activities to the workflow bot
+        attributes 'Main-Class': 'org.springframework.boot.loader.PropertiesLauncher'
+    }
+    duplicatesStrategy(DuplicatesStrategy.INCLUDE)
+}
+
+jar {
+    enabled = true
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact bootJar
+        }
+        plain(MavenPublication) {
+            from components.java
+            artifactId = "${project.name}-plain"
+            pom(rootProject.ext.pomDefinition)
+            pom.withXml {
+                asNode().children().first().plus {
+                    setResolveStrategy(Closure.DELEGATE_FIRST)
+                    'name' project.name
+                    'description' project.description
+                }
+            }
+        }
+    }
+}
+
+processResources {
+    filter ReplaceTokens, tokens: [
+            "wdk.version": project.version
+    ]
+}
+
+signing {
+    required { !rootProject.ext.projectVersion.endsWith('SNAPSHOT') }
+    sign publishing.publications.plain
+}

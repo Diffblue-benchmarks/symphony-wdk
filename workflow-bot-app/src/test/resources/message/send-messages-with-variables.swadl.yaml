@@ -1,0 +1,13 @@
+id: send-message-on-message-with-variables
+variables:
+  streamId: "1234"
+activities:
+  - send-message:
+      id: "sendmessageid"
+      on:
+        message-received:
+          content: "/send"
+      to:
+        stream-id: ${variables.streamId}
+      content: |
+        <messageML>Have a nice day !</messageML>

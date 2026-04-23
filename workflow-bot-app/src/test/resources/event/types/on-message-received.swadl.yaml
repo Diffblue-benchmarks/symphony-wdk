@@ -1,0 +1,10 @@
+id: on-message-received
+activities:
+  - send-message:
+      id: echo
+      on:
+        message-received:
+          content: /execute
+      # to is omitted so reply is sent to the same stream as the originating event
+      content:
+        ${text(event.source.message.message)}

@@ -1,0 +1,12 @@
+id: send-blast-message-with-userids
+activities:
+  - send-message:
+      id: sendBlastMessageWithUserIds
+      content: "<messageML>hello</messageML>"
+      on:
+        message-received:
+          content: "/send"
+      to:
+        user-ids:
+          - 123
+          - 456

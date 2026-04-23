@@ -1,0 +1,16 @@
+id: forward-multiple-attachments-in-message
+activities:
+  - send-message:
+      id: forwardMultiple
+      on:
+        message-received:
+          content: /forward-multiple
+      to:
+        stream-id: "123"
+      content: <messageML>here is a msg with attachment</messageML>
+      attachments:
+        - message-id: "MSG_ID"
+          attachment-id: "ATTACHMENT_ID_1"
+        - message-id: "MSG_ID"
+          attachment-id: "ATTACHMENT_ID_2"
+

@@ -1,0 +1,12 @@
+id: add-user-role
+activities:
+  - add-user-role:
+      id: user
+      on:
+        message-received:
+          content: /update-user
+      user-ids:
+        - 123
+      roles:
+        - ADMINISTRATOR
+        - AGENT
