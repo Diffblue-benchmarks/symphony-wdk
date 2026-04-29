@@ -22,3 +22,7 @@ dependencies {
     compileOnly("com.diffblue.cover:cover-annotations:1.9.0")
     testImplementation("com.diffblue.cover:cover-annotations:1.9.0")
 }
+
+pitest {
+    targetClasses = ['com.symphony.bdk.workflow.*']
+}

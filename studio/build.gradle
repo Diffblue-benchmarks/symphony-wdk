@@ -26,6 +26,10 @@ configurations.testRuntimeClasspath {
 // Exclude pre-existing broken test that references removed SDK APIs
 sourceSets.test.java.exclude '**/SymphonyClientTest.java'
 
+pitest {
+    targetClasses = ['com.symphony.devsol.*']
+}
+
 tasks.register('customActivityLibs', Copy) {
     description "Copies custom activity dependencies in lib folder."
     from jar

@@ -10,6 +10,9 @@ plugins {
     // deployment
     id 'maven-publish'
     id 'signing'
+
+    // mutation testing
+    id 'info.solidsoft.pitest'
 }
 
 repositories {
@@ -103,4 +106,10 @@ publishing {
 signing {
     required { !rootProject.ext.projectVersion.endsWith('SNAPSHOT') }
     sign publishing.publications.maven
+}
+
+pitest {
+    junit5PluginVersion = '1.2.1'
+    outputFormats = ['XML', 'HTML']
+    timestampedReports = false
 }
