@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'distribution'
+    id 'jacoco'
 }
 
 java {
@@ -11,6 +12,12 @@ java {
 
 test {
     useJUnitPlatform()
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+    }
 }
 
 repositories {
